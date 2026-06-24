@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>M2 股价引擎测试</title></head>
+<body style="background:#111;color:#0f0;font-family:monospace;padding:20px;font-size:14px;line-height:1.6;">
+<h1 style="color:#fff">🧪 M2 股价引擎测试（天数版）</h1><div id="o"></div>
+
+<script>
+var $o=document.getElementById('o');
+function log(m,c){var d=document.createElement('div');d.className=c||'';d.textContent=m;$o.appendChild(d);}
+
+/* ===== M1 数据层（内联） ===== */
+var M1=(function(){
+  var CFG={START_MONEY:100000,FEE_RATE:0.005,TRADE_UNIT:100,T_PLUS_1_DAYS:1,
+    DAYS_PER_WEEK:7,DAYS_PER_MONTH:30,DAYS_PER_YEAR:365,
+    SPEED_MODES:{day:{label:'D',days:1},week:{label:'W',days:7},month:{label:'M',days:30},year:{label:'Y',days:365}},
+    COEFF_REVERT:0.005};
+  function createShops(){return[
+    {id:'laowang',name:'老王面馆',icon:'🍜',base:35,vol:0.02,risk:'保守',sector:'餐饮',price:35,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0},
+    {id:'meng',name:'萌科技',icon:'💻',base:80,vol:0.06,risk:'激进',sector:'tech',price:80,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0},
+    {id:'amei',name:'阿美花店',icon:'🌸',base:50,vol:0.03,risk:'稳健',sector:'零售',price:50,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0}
+  ];}
+  function createGame(){return{money:CFG.START_MONEY,day:1,year:1,speed:'week',log:[],history:[CFG.START_MONEY],pendingT1:[]};}
+  function dayToDate(d){return{y:Math.floor((d-1)/365)+1,m:(Math.floor(((d-1)%365)/30))+1,d:((d-1)%30)+1};}
+  function getWeekDay(d){return((d-1)%7)+1;}
+  return{CONFIG:CFG,createShops:createShops,createGame:createGame,dayToDate:dayToDate,getWeekDay:getWeekDay};
+})();
+log('[OK] M1 loaded');
+
+/* ===== M2 股价引擎（内联） ===== */
+var M2=(function(){
+  function tickDays(shops,g){
+    var days=M1.CONFIG.SPEED_MODES[g.speed].days;
+    for(var d=0;d<days;d++){
+      for(var i=0;i<shops.length;i++){
+        var s=shops[i];
+        var ch=(Math.random()-0.48)*2*s.vol+(s.coeff-1)*0.3*s.vol;
+        if(ch>0.10)ch=0.10;if(ch<-0.10)ch=-0.10;
+        s.price=Math.max(1,Math.round(s.price*(1+ch)*100)/100);
+      }
+      settleT1(g);
+      if(M1.getWeekDay(g.day+d)===7){
+        for(var k=0;k<shops.length;k++){shops[k].coeff=Math.round((shops[k].coeff*0.995+0.005)*1000)/1000;}
+      }
+    }
+    g.day+=days;g.year=Math.floor((g.day-1)/365)+1;
+    return{days:days,endDay:g.day};
+  }
+  function settleT1(g){var ok=[];for(var i=0;i<g.pendingT1.length;i++)if(g.pendingT1[i].unlockDay>g.day)ok.push(g.pendingT1[i]);g.pendingT1=ok;}
+  function tickShop(sh,chp){if(chp>0.1)chp=0.1;if(chp<-0.1)chp=-0.1;var op=sh.price;sh.price=Math.max(1,Math.round(sh.price*(1+chp)*100)/100);return{old:op,new_:sh.price,change:chp};}
+  function calcTotalAssets(g,s){var v=0;for(var i=0;i<s.length;i++)v+=s[i].price*s[i].shares;return g.money+v;}
+  return{tickDays:tickDays,tickShop:tickShop,calcTotalAssets:calcTotalAssets,settleT1:settleT1};
+})();
+log('[OK] M2 loaded, keys='+Object.keys(M2).join(','));
+
+/* ===== 测试 ===== */
+try{
+  log('');
+  log('========== M2 股价引擎测试 ==========','info');
+  log('--- 对象验证 ---','info');
+  if(typeof M2!=='object')throw new Error('M2非对象');
+  if(typeof M2.tickDays!=='function')throw new Error('tickDays不是函数');
+  log('✅ M2 对象存在');
+
+  /* 推进时间 */
+  log('--- 推进时间 ---','info');
+  var g=M1.createGame();var s=M1.createShops();
+  var p0=s[0].price;
+  var r=M2.tickDays(s,g);
+  if(r.days!==7)throw new Error('默认应推进7天,实际'+r.days);
+  if(g.day!==8)throw new Error('天数应为8,实际'+g.day);
+  log('✅ week模式推进7天: D1→D'+g.day);
+
+  /* 股价应变化 */
+  log('--- 股价波动 ---','info');
+  var s2=M1.createShops();var g2=M1.createGame();
+  var pricesBefore=[];
+  for(var bi=0;bi<s2.length;bi++)pricesBefore.push(s2[bi].price);
+  M2.tickDays(s2,g2);
+  var changed=false;
+  for(var ci=0;ci<s2.length;ci++){if(s2[ci].price!==pricesBefore[ci])changed=true;}
+  if(!changed)throw new Error('股价未变化');
+  log('✅ 推进后股价已变化');
+
+  /* 涨跌停限制 */
+  log('--- 涨跌停 ---','info');
+  var s3=M1.createShops();
+  s3[0].price=50;
+  M2.tickShop(s3[0],0.15);
+  if(s3[0].price>55)throw new Error('涨停应为55,实际'+s3[0].price);
+  M2.tickShop(s3[0],-0.20);
+  if(s3[0].price<49.5)throw new Error('跌停应为49.5,实际'+s3[0].price);
+  log('✅ 涨跌停限制正确');
+
+  /* 经营系数回归 */
+  log('--- 系数回归 ---','info');
+  var sc=M1.createShops()[0];sc.coeff=2.0;
+  var gc=M1.createGame();gc.speed='day';
+  for(var w=0;w<6;w++)M2.tickDays([sc],gc);
+  if(sc.coeff<1.99)throw new Error('周一~周六系数不应变:'+sc.coeff.toFixed(4));
+  log('✅ 周一~周六系数不变: '+sc.coeff.toFixed(4));
+  M2.tickDays([sc],gc);
+  if(sc.coeff>=1.999)throw new Error('周日系数应回归');
+  log('✅ 周日系数回归: '+sc.coeff.toFixed(4));
+
+  /* 速度模式 */
+  log('--- 速度模式 ---','info');
+  var gs=M1.createGame();
+  gs.speed='day';M2.tickDays([],gs);if(gs.day!==2)throw new Error('day模式错误');
+  gs.speed='month';M2.tickDays([],gs);if(gs.day!==32)throw new Error('month模式错误');
+  gs.speed='year';M2.tickDays([],gs);if(gs.day!==397)throw new Error('year模式错误');
+  log('✅ 速度模式: day/月/年 正确');
+
+  /* 总资产计算 */
+  log('--- 总资产计算 ---','info');
+  var ga=M1.createGame();var sa=M1.createShops();
+  sa[0].shares=1000;sa[0].price=50;
+  var ta=M2.calcTotalAssets(ga,sa);
+  if(ta-M1.CONFIG.START_MONEY>50000||ta-M1.CONFIG.START_MONEY<50000)throw new Error('总资产应为150000,实际'+ta);
+  log('✅ calcTotalAssets: $'+ta.toFixed(2));
+
+  log('');
+  log('========== 全部通过 ✅ ==========','info');
+}catch(e){
+  log('❌ 失败: '+e.message,'err');
+}
+</script></body></html>

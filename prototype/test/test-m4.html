@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>M4 Test</title></head>
+<body style="background:#111;color:#0f0;font-family:monospace;padding:20px;font-size:14px;line-height:1.6;">
+<h1 style="color:#fff">🧪 M4 交易系统测试</h1>
+<div id="o"></div>
+<script>
+var $o = document.getElementById('o');
+function log(m,c){var d=document.createElement('div');d.className=c||'';d.textContent=m;$o.appendChild(d);}
+
+/* ===== M1 数据层 ===== */
+var M1 = (function() {
+  var SHOPS = [
+    {id:'laowang',name:'老王面馆',icon:'🍜',base:35,vol:0.02,risk:'保守',sector:'餐饮'},
+    {id:'meng',name:'萌科技',icon:'💻',base:80,vol:0.06,risk:'激进',sector:'科技'},
+    {id:'amei',name:'阿美花店',icon:'🌸',base:50,vol:0.03,risk:'稳健',sector:'零售'},
+    {id:'liqiao',name:'李桥物流',icon:'🚛',base:45,vol:0.025,risk:'稳健',sector:'物流'},
+    {id:'chenyao',name:'陈药师',icon:'💊',base:60,vol:0.022,risk:'保守',sector:'医疗'},
+    {id:'zhangji',name:'张家烘焙',icon:'🍞',base:40,vol:0.015,risk:'保守',sector:'餐饮'},
+    {id:'zhouyu',name:'周渔庄',icon:'🐟',base:55,vol:0.04,risk:'激进',sector:'农业'},
+    {id:'linxiao',name:'林小超市',icon:'🏪',base:30,vol:0.022,risk:'稳健',sector:'零售'}
+  ];
+  var CFG = {START_MONEY:100000,FEE_RATE:0.005,TRADE_UNIT:100,LIMIT_UP:1.10,LIMIT_DOWN:0.90,
+    DAYS_PER_WEEK:7,DAYS_PER_MONTH:30,DAYS_PER_YEAR:365,T_PLUS_1_DAYS:1};
+  function createShops() {
+    var r=[];
+    for(var i=0;i<SHOPS.length;i++){
+      var s=SHOPS[i];
+      r.push({id:s.id,name:s.name,icon:s.icon,base:s.base,vol:s.vol,risk:s.risk,sector:s.sector,price:s.base,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0});
+    }
+    return r;
+  }
+  function createGame(){return{money:CFG.START_MONEY,day:1,year:1,speed:'week',log:[],history:[CFG.START_MONEY],pendingT1:[]};}
+  return{SHOP_TEMPLATES:SHOPS,CONFIG:CFG,createShops:createShops,createGame:createGame};
+})();
+log('[OK] M1 loaded');
+
+/* ===== M2 股价引擎 ===== */
+var M2 = (function(){
+  function tickDays(shops,g){
+    var days=M1.CONFIG.SPEED_MODES?M1.CONFIG.SPEED_MODES[g.speed].days:7;
+    if(!days)days=7;
+    for(var d=0;d<days;d++){
+      for(var i=0;i<shops.length;i++){
+        var s=shops[i];
+        var ch=(Math.random()-0.48)*2*s.vol+(s.coeff-1)*0.3*s.vol;
+        if(ch>0.10)ch=0.10;if(ch<-0.10)ch=-0.10;
+        s.price=Math.max(1,Math.round(s.price*(1+ch)*100)/100);
+      }
+      settleT1(g);
+    }
+    g.day+=days;g.year=Math.floor((g.day-1)/365)+1;
+    return{days:days,endDay:g.day};
+  }
+  function settleT1(g){
+    var ok=[];var cd=g.day;
+    for(var i=0;i<g.pendingT1.length;i++){if(g.pendingT1[i].unlockDay>cd)ok.push(g.pendingT1[i]);}
+    g.pendingT1=ok;
+  }
+  function calcTotalAssets(g,s){var v=0;for(var i=0;i<s.length;i++)v+=s[i].price*s[i].shares;return g.money+v;}
+  /* 补上SPEED_MODES */
+  M1.CONFIG.SPEED_MODES={day:{label:'D',days:1},week:{label:'W',days:7},month:{label:'M',days:30},year:{label:'Y',days:365}};
+  return{tickDays:tickDays,settleT1:settleT1,calcTotalAssets:calcTotalAssets};
+})();
+log('[OK] M2 loaded');
+
+/* ===== M4 交易系统 ===== */
+var M4 = (function(){
+  function calcBuyCost(p,a){
+    var f=Math.round(p*a*M1.CONFIG.FEE_RATE*100)/100;
+    return{price:p,amount:a,cost:p*a,fee:f,total:p*a+f};
+  }
+  function buy(g,s,id,amt){
+    if(!id||!amt||amt<=0)return{s:false,e:'参数无效'};
+    if(amt%M1.CONFIG.TRADE_UNIT!==0)return{s:false,e:'必须按'+M1.CONFIG.TRADE_UNIT+'股整数倍'};
+    var shop=null;
+    for(var i=0;i<s.length;i++){if(s[i].id===id){shop=s[i];break;}}
+    if(!shop)return{s:false,e:'店铺不存在'};
+    var c=calcBuyCost(shop.price,amt);
+    if(c.total>g.money)return{s:false,e:'余额不足'};
+    g.money=Math.round((g.money-c.total)*100)/100;
+    shop.shares+=amt;shop.lockedShares+=amt;
+    g.pendingT1.push({shopId:id,shares:amt,unlockDay:g.day+M1.CONFIG.T_PLUS_1_DAYS});
+    return{s:true,result:c};
+  }
+  function calcSellRevenue(p,a){
+    var r=p*a;var f=Math.round(r*M1.CONFIG.FEE_RATE*100)/100;
+    return{price:p,amount:a,revenue:r,fee:f,net:r-f};
+  }
+  function sell(g,s,id,amt){
+    if(!id||!amt||amt<=0)return{s:false,e:'参数无效'};
+    if(amt%M1.CONFIG.TRADE_UNIT!==0)return{s:false,e:'必须按100股整数倍'};
+    var shop=null;
+    for(var i=0;i<s.length;i++){if(s[i].id===id){shop=s[i];break;}}
+    if(!shop)return{s:false,e:'店铺不存在'};
+    var sellable=shop.shares-shop.lockedShares;
+    if(sellable<=0)return{s:false,e:'T+1锁定中'};
+    if(amt>sellable)return{s:false,e:'可卖不足'};
+    var c=calcSellRevenue(shop.price,amt);
+    shop.shares-=amt;g.money=Math.round((g.money+c.net)*100)/100;
+    return{s:true,result:c};
+  }
+  function getTradeStatus(sh){
+    var sv=sh.shares-sh.lockedShares;if(sv<0)sv=0;
+    return{canBuy:true,canSell:sv>0,sellable:sv,locked:sh.lockedShares,totalShares:sh.shares,maxSell:sv-(sv%100)};
+  }
+  function unlockExpired(g,shops){
+    var cur=g.day,un=[];
+    for(var i=g.pendingT1.length-1;i>=0;i--){
+      if(g.pendingT1[i].unlockDay<=cur){
+        var p=g.pendingT1.splice(i,1)[0];
+        for(var j=0;j<shops.length;j++){
+          if(shops[j].id===p.shopId&&shops[j].lockedShares>=p.shares){shops[j].lockedShares-=p.shares;un.push(p);break;}
+          else if(shops[j].id===p.shopId){shops[j].lockedShares=0;un.push(p);break;}
+        }
+      }
+    }
+    return un;
+  }
+  return{calcBuyCost:calcBuyCost,buy:buy,calcSellRevenue:calcSellRevenue,sell:sell,getTradeStatus:getTradeStatus,unlockExpired:unlockExpired};
+})();
+log('[OK] M4 loaded, keys='+Object.keys(M4).join(','));
+
+/* ===== 测试 ===== */
+try{
+  log('');
+  log('========== M4 交易系统测试 ==========','info');
+  log('--- 基础验证 ---','info');
+  if(typeof M4!=='object')throw new Error('M4非对象');
+  log('✅ M4对象存在');
+
+  log('--- 买入费用计算 ---','info');
+  var bc=M4.calcBuyCost(50,100);
+  if(bc.cost!==5000)throw new Error('cost错:'+bc.cost);
+  if(bc.fee!==25)throw new Error('fee错:'+bc.fee);
+  if(bc.total!==5025)throw new Error('total错:'+bc.total);
+  log('✅ calcBuyCost(50,100): 成本$5000,手续费$25,总计$5025');
+
+  log('--- 卖出收入计算 ---','info');
+  var sr=M4.calcSellRevenue(60,100);
+  if(sr.revenue!==6000)throw new Error('rev错');
+  if(sr.fee!==30)throw new Error('fee错');
+  if(sr.net!==5970)throw new Error('net错');
+  log('✅ calcSellRevenue(60,100): 收入$6000,手续费$30,净得$5970');
+
+  log('--- 执行买入 ---','info');
+  var g=M1.createGame();var ss=M1.createShops();
+  var lwIdx=0;
+  for(var x=0;x<ss.length;x++)if(ss[x].id==='laowang')lwIdx=x;
+
+  var r1=M4.buy(g,ss,'laowang',100);
+  if(!r1.s)throw new Error('买入失败:'+r1.e);
+  if(ss[lwIdx].shares!==100)throw new Error('持仓应为100');
+  if(ss[lwIdx].lockedShares!==100)throw new Error('锁定应为100');
+  log('✅ 买入100股:余额$'+g.money.toFixed(2)+',持仓100,锁定100,花费$'+r1.result.total.toFixed(2));
+
+  log('--- 余额不足 ---','info');
+  var rp=M4.buy(g,ss,'meng',9999999);
+  if(rp.s)throw new Error('不应成功');
+  log('✅ 余额不足失败:"'+rp.e+'"');
+
+  log('--- 非100倍数 ---','info');
+  var rb=M4.buy(g,ss,'amei',55);
+  if(rb.s)throw new Error('不应成功');
+  log('✅ 非100倍数失败:"'+rb.e+'"');
+
+  log('--- T+1锁定期间卖出 ---','info');
+  var ts0=M4.getTradeStatus(ss[lwIdx],g);
+  if(ts0.canSell)throw new Error('刚买不应可卖');
+  log('✅ 锁定期内不可卖');
+
+  log('--- T+1解锁后可卖 ---','info');
+  g.speed='day';
+  M2.tickDays(ss,g);
+  M4.unlockExpired(g,ss);
+  var ts1=M4.getTradeStatus(ss[lwIdx],g);
+  if(!ts1.canSell||ts1.sellable<100)throw new Error('解锁后应可卖,实际sellable='+ts1.sellable);
+  log('✅ T+1到期:可卖'+ts1.sellable+'股');
+
+  log('--- 卖出 ---','info');
+  var rs=M4.sell(g,ss,'laowang',100);
+  if(!rs.s)throw new Error('卖出失败');
+  if(ss[lwIdx].shares!==0)throw new Error('持仓应归零');
+  log('✅ 卖出100股:净得$'+rs.result.net.toFixed(2));
+
+  log('--- 多次买卖 ---','info');
+  var gm=M1.createGame();var sm=M1.createShops();
+  M4.buy(gm,sm,'laowang',200);
+  M4.buy(gm,sm,'amei',300);
+  M4.buy(gm,sm,'meng',100);
+  var ta=M2.calcTotalAssets(gm,sm);
+  if(gm.money>=M1.CONFIG.START_MONEY*0.98)throw new Error('余额应减少');
+  log('✅ 3家各买入:余额$'+gm.money.toFixed(2)+'总资产$'+ta.toFixed(2));
+
+  gm.speed='day';M2.tickDays(sm,gm);M4.unlockExpired(gm,sm);
+  M4.sell(gm,sm,'laowang',100);
+  if(sm[0].shares!==100)throw new Error('部分卖后应为100');
+  log('✅ 部分卖出:老王剩100,余额$'+gm.money.toFixed(2));
+
+  log('--- getTradeStatus查询 ---','info');
+  var st=M4.getTradeStatus(sm[0],gm);
+  if(typeof st!=='object')throw new Error('应返回对象');
+  if(!st.canBuy)throw new Error('应可买,canBuy='+st.canBuy);
+  if(!st.canSell)throw new Error('应可卖');
+  if(st.totalShares!==100)throw new Error('总持仓错误');
+  log('✅ 持仓状态:可买=true,可卖=true,持仓='+st.totalShares);
+
+  log('--- 空仓状态 ---','info');
+  var es=M4.getTradeStatus(M1.createShops()[6],gm);
+  if(es.canSell)throw new Error('空仓不可卖');
+  if(!es.canBuy)throw new Error('空仓应可买');
+  log('✅ 空仓:canBuy=true,canSell=false');
+
+  log('');
+  log('========== 全部通过 ✅ ==========','info');
+}catch(e){
+  log('❌ 失败: '+e.message,'err');
+}
+</script>
+</body>
+</html>

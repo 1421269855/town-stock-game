@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>游戏规则 - 小镇股票交易所</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;font-size:14px;line-height:1.7}
+.header{background:#161b22;padding:14px 16px;border-bottom:1px solid #30363d;display:flex;align-items:center}
+.back-btn{background:none;border:1px solid #30363d;color:#8b949e;font-size:13px;padding:5px 12px;border-radius:6px;cursor:pointer;margin-right:12px}
+.back-btn:hover{border-color:#58a6ff;color:#e6edf3}
+.header h2{font-size:16px;color:#e6edf3;font-weight:600}
+.body{padding:16px;max-width:480px;margin:0 auto}
+.section{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;margin-bottom:14px}
+.section h3{font-size:15px;color:#58a6ff;margin-bottom:10px;font-weight:600}
+.rule{margin-bottom:10px;font-size:13px}
+.rule .title{color:#e6edf3;font-weight:600;margin-bottom:2px}
+.rule .text{color:#8b949e;font-size:12px}
+.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:4px}
+.tag-good{background:#1a3a2a;color:#3fb950}
+.tag-bad{background:#3a1a1a;color:#f85149}
+.tag-warn{background:#3a3520;color:#d29922}
+.footer{text-align:center;padding:20px;color:#484f58;font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn" onclick="location.href='start.html'">← 返回</button>
+  <h2>📖 游戏规则</h2>
+</div>
+
+<div class="body">
+
+  <div class="section">
+    <h3>🎮 基本玩法</h3>
+    <div class="rule">
+      <div class="title">📈 股票买卖</div>
+      <div class="text">在「镇上店铺」tab 点击店铺卡片，可查看详情并买入/卖出股份。每次交易需买入100股的整数倍，卖出时锁定股份（T+1）需等待1天解锁。</div>
+    </div>
+    <div class="rule">
+      <div class="title">⏭ 推进时间</div>
+      <div class="text">点击底部「推进时间」按钮，或按空格键，时间会按当前速度推进。速度可在顶部切换：日/周/月/年。</div>
+    </div>
+    <div class="rule">
+      <div class="title">🎯 游戏目标</div>
+      <div class="text">通过买卖店铺股份、介入经营，在限定时间内最大化总资产（现金+持仓市值）。</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>💼 人脉点数系统</h3>
+    <div class="rule">
+      <div class="title">什么是人脉点数 <span class="tag tag-good">重要</span></div>
+      <div class="text">人脉点数用于「介入经营」。每次介入消耗10点。人脉点数每天自动恢复10点，上限100点。</div>
+    </div>
+    <div class="rule">
+      <div class="title">如何获得人脉点数</div>
+      <div class="text">① 推进时间：每推进1天恢复1点（自动累积）<br>② 完成交易：每次买入/卖出恢复5点<br>③ 事件触发：部分随机事件会奖励人脉点数</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>❤️ 关系值系统</h3>
+    <div class="rule">
+      <div class="title">什么是关系值</div>
+      <div class="text">与每家店铺的关系值（0~100）决定你能对该店铺使用的介入经营类型。关系值越高，介入成功率越高。</div>
+    </div>
+    <div class="rule">
+      <div class="title">介入经营类型与关系要求</div>
+      <div class="text">
+        📋 <b>经营建议</b> <span class="tag">需20关系</span> — 提供经营建议，小幅影响经营系数<br>
+        🔧 <b>帮助解决问题</b> <span class="tag">需30关系</span> — 协助处理困难，效果较温和<br>
+        🤝 <b>介绍客户</b> <span class="tag tag-warn">需40关系</span> — 拉来新客户，中等效果<br>
+        💰 <b>追加投资</b> <span class="tag tag-bad">需60关系</span> — 投入资金升级，效果最强<br>
+      </div>
+    </div>
+    <div class="rule">
+      <div class="title">如何提升关系值</div>
+      <div class="text">① 介入经营成功：+3关系值<br>② 介入经营失败：-5关系值<br>③ 持有该店铺股份：每天+0.5（被动增长）<br>④ 特殊事件：部分事件会影响关系值</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>📢 事件系统</h3>
+    <div class="rule">
+      <div class="title">事件如何触发</div>
+      <div class="text">推进时间时有25%概率触发随机事件。事件可能影响单个店铺、多个店铺或全市场。</div>
+    </div>
+    <div class="rule">
+      <div class="title">事件类型</div>
+      <div class="text">
+        <span class="tag tag-good">利好</span> 美食节、政策红利、科技展会等 → 股价上涨<br>
+        <span class="tag tag-bad">利空</span> 暴雨、经济下行、电商冲击等 → 股价下跌<br>
+        <span class="tag tag-warn">随机</span> 网红打卡等 → 随机影响某家店铺
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>📊 股价机制</h3>
+    <div class="rule">
+      <div class="title">价格如何变动</div>
+      <div class="text">每家店铺有「经营系数」（初始1.0），系数越高股价基础趋势越好。股价每天随机波动，受系数、行业风险、事件三者共同影响。</div>
+    </div>
+    <div class="rule">
+      <div class="title">风险等级</div>
+      <div class="text">
+        <span class="tag tag-good">保守</span> 波动小，适合稳健型玩家<br>
+        <span class="tag tag-warn">稳健</span> 中等波动<br>
+        <span class="tag tag-bad">激进</span> 波动大，高风险高回报
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>💾 存档说明</h3>
+    <div class="rule">
+      <div class="title">自动存档</div>
+      <div class="text">每次推进时间、买卖、介入经营后自动保存。关闭页面后重新打开可继续游戏。</div>
+    </div>
+    <div class="rule">
+      <div class="title">多槽位存档</div>
+      <div class="text">游戏支持3个存档槽位，可在开始页或存档选择界面切换。每个槽位独立保存进度。</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">小镇股票交易所 v0.3 · 原型阶段</div>
+
+</body>
+</html>

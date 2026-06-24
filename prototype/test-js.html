@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<title>Test</title>
+<style>body{font-family:sans-serif;padding:20px;background:#f5f3ef} .ok{color:green;font-size:20px} .err{color:red;font-size:20px}</style>
+</head>
+<body>
+<h1>JS Test</h1>
+<p id="status">Loading...</p>
+<button onclick="testClick()">点击测试按钮</button>
+<div id="shops"></div>
+
+<script>
+document.getElementById('status').innerHTML='<span class="ok">JS运行正常!</span>';
+
+var shops=[
+  {name:'老王面馆',price:12.50,chg:+2.3},
+  {name:'萌科技',price:55.00,chg:-4.1},
+  {name:'阿美花店',price:32.80,chg:+0.8},
+];
+
+var html='';
+for(var i=0;i<shops.length;i++){
+  var s=shops[i];
+  var color=s.chg>=0?'#e24b4a':'#3b6d11';
+  var sign=s.chg>=0?'+':'';
+  html+='<div style="background:#fff;border-radius:8px;padding:14px;margin:8px 0;border:1px solid #ddd;cursor:pointer;" onclick="alert(\'你点击了 '+s.name+'!\')">';
+  html+='<strong>'+s.name+'</strong><br>';
+  html+='<span style="font-size:22px;color:#333">$'+s.price.toFixed(2)+'</span> ';
+  html+='<span style="font-size:14px;color:'+color+'">'+sign+s.chg.toFixed(2)+'%</span>';
+  html+='</div>';
+}
+document.getElementById('shops').innerHTML=html;
+
+function testClick(){
+  alert('按钮点击成功！JS完全正常');
+}
+console.log('TEST PAGE LOADED OK');
+</script>
+</body>
+</html>

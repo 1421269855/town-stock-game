@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>M1+M2 内联测试</title></head>
+<body style="background:#111;color:#0f0;font-family:monospace;padding:20px;font-size:14px;line-height:1.6;">
+<h1 style="color:#fff">🧪 M1+M2 时间系统重构测试</h1>
+<div id="o"></div>
+
+<script>
+var $o = document.getElementById('o');
+function log(m,c){var d=document.createElement('div');d.className=c||'';d.textContent=m;$o.appendChild(d);}
+
+/* ===== M1 DATA ===== */
+var SHOPS = [
+  {id:'laowang',name:'老王面馆',icon:'🍜',base:35,vol:0.02,risk:'保守',sector:'餐饮'},
+  {id:'meng',name:'萌科技',icon:'💻',base:80,vol:0.06,risk:'激进',sector:'tech'},
+  {id:'amei',name:'阿美花店',icon:'🌸',base:50,vol:0.03,risk:'稳健',sector:'零售'},
+  {id:'liqiao',name:'李桥物流',icon:'🚛',base:45,vol:0.025,risk:'稳健',sector:'物流'},
+  {id:'chenyao',name:'陈药师',icon:'💊',base:60,vol:0.022,risk:'保守',sector:'医疗'},
+  {id:'zhangji',name:'张家烘焙',icon:'🍞',base:40,vol:0.015,risk:'保守',sector:'餐饮'},
+  {id:'zhouyu',name:'周渔庄',icon:'🐟',base:55,vol:0.04,risk:'激进',sector:'农业'},
+  {id:'linxiao',name:'林小超市',icon:'🏪',base:30,vol:0.022,risk:'稳健',sector:'零售'}
+];
+var CONFIG = {
+  START_MONEY:100000,FEE_RATE:0.005,TRADE_UNIT:100,
+  T_PLUS_1_DAYS:1,
+  SPEED_MODES:{day:{label:'D',days:1},week:{label:'W',days:7},month:{label:'M',days:30},year:{label:'Y',days:365}},
+  DAYS_PER_MONTH:30,DAYS_PER_YEAR:365,LIMIT_PCT:0.10,
+  REL_COST_PER_INTERVENTION:10,
+  INTERVENTION_TYPES:{
+    advice:{name:'经营建议',relReq:20,coeffMin:-0.05,coeffMax:0.15},
+    client:{name:'介绍客户',relReq:40,coeffMin:0.05,coeffMax:0.20},
+    invest:{name:'追加投资',relReq:60,coeffMin:0.08,coeffMax:0.25},
+    help:{name:'帮助解决问题',relReq:30,coeffMin:-0.03,coeffMax:0.12}
+  }
+};
+function dayToDate(day) {
+  var year = Math.floor((day - 1) / CONFIG.DAYS_PER_YEAR) + 1;
+  var dayInYear = (day - 1) % CONFIG.DAYS_PER_YEAR;
+  var rawMonth = Math.floor(dayInYear / CONFIG.DAYS_PER_MONTH);
+  if (rawMonth >= 12) {
+    return { year: year, month: 12, day: dayInYear - 360 + 1 };
+  }
+  return { year: year, month: rawMonth + 1, day: (dayInYear % CONFIG.DAYS_PER_MONTH) + 1 };
+}
+function formatDate(day) {
+  var d = dayToDate(day);
+  return 'Y' + d.year + ' M' + d.month + ' D' + d.day;
+}
+function getWeekDay(day) {
+  return ((day - 1) % 7) + 1; /* 1=Mon, 7=Sun */
+}
+function createShops() {
+  var arr = [];
+  for (var i = 0; i < SHOPS.length; i++) {
+    arr.push({
+      id: SHOPS[i].id, name: SHOPS[i].name, icon: SHOPS[i].icon,
+      basePrice: SHOPS[i].base, price: SHOPS[i].base,
+      vol: SHOPS[i].vol, risk: SHOPS[i].risk, sector: SHOPS[i].sector,
+      coeff: 1.0, shares: 0, lockedShares: 0, rel: 50,
+      history: [SHOPS[i].base]
+    });
+  }
+  return arr;
+}
+function createGame() {
+  return {
+    money: CONFIG.START_MONEY, day: 1, speed: 'week',
+    pendingT1: [], rp: 100,
+    log: []
+  };
+}
+var M1 = {SHOPS:SHOPS,CONFIG:CONFIG,createShops:createShops,createGame:createGame,dayToDate:dayToDate,formatDate:formatDate,getWeekDay:getWeekDay};
+log('[OK] M1 loaded','ok');
+
+/* ===== M2 PRICE ENGINE ===== */
+function randFloat(min, max) {
+  return Math.random() * (max - min) + min;
+}
+function tickShop(shop, days) {
+  if (!days || days < 1) days = 1;
+  for (var d = 0; d < days; d++) {
+    var baseChange = randFloat(-shop.vol, shop.vol);
+    var marketMood = randFloat(-0.005, 0.005);
+    var coeffEffect = (shop.coeff > 1 ? (shop.coeff - 1) * shop.vol * 0.3 : (shop.coeff - 1) * shop.vol * 0.3);
+    var totalPct = baseChange + marketMood + coeffEffect;
+    var maxPct = CONFIG.LIMIT_PCT;
+    if (totalPct > maxPct) totalPct = maxPct;
+    if (totalPct < -maxPct) totalPct = -maxPct;
+    shop.price *= (1 + totalPct);
+    shop.history.push(shop.price);
+    if (shop.history.length > 365) shop.history.shift();
+  }
+  return { id: shop.id, name: shop.name, pct: totalPct, newPrice: shop.price };
+}
+function settleT1(game, curDay) {
+  if (!game.pendingT1 || game.pendingT1.length === 0) return [];
+  var unlocked = [];
+  var remaining = [];
+  for (var i = 0; i < game.pendingT1.length; i++) {
+    var p = game.pendingT1[i];
+    if (curDay >= p.unlockDay) {
+      unlocked.push(p);
+    } else {
+      remaining.push(p);
+    }
+  }
+  game.pendingT1 = remaining;
+  return unlocked;
+}
+function tickDays(shops, game) {
+  if (!game.speed) game.speed = 'week';
+  var spd = CONFIG.SPEED_MODES[game.speed];
+  if (!spd) spd = CONFIG.SPEED_MODES.week;
+  var daysToAdvance = spd.days;
+  var records = [];
+  for (var di = 0; di < daysToAdvance; di++) {
+    game.day++;
+    var wd = getWeekDay(game.day);
+    for (var si = 0; si < shops.length; si++) {
+      tickShop(shops[si], 1);
+    }
+    if (wd === 7) {
+      for (var si2 = 0; si2 < shops.length; si2++) {
+        shops[si2].coeff = shops[si2].coeff * 0.995 + 0.005;
+        if (shops[si2].coeff > 2.0) shops[si2].coeff = 2.0;
+        if (shops[si2].coeff < 0.4) shops[si2].coeff = 0.4;
+      }
+    }
+    var settled = settleT1(game, game.day);
+    if (settled.length > 0) {
+      for (var k = 0; k < settled.length; k++) {
+        for (var j = 0; j < shops.length; j++) {
+          if (shops[j].id === settled[k].shopId && shops[j].lockedShares >= settled[k].shares) {
+            shops[j].lockedShares -= settled[k].shares;
+            break;
+          } else if (shops[j].id === settled[k].shopId) {
+            shops[j].lockedShares = 0;
+            break;
+          }
+        }
+      }
+    }
+  }
+  for (var ri = 0; ri < shops.length; ri++) {
+    records.push({ id: shops[ri].id, name: shops[ri].name, price: shops[ri].price, coeff: shops[ri].coeff });
+  }
+  return records;
+}
+function calcTotalAssets(game, shops) {
+  var holdVal = 0;
+  for (var i = 0; i < shops.length; i++) {
+    holdVal += shops[i].price * shops[i].shares;
+  }
+  return { cash: game.money, holdings: holdVal, total: game.money + holdVal };
+}
+var M2 = {tickDays:tickDays,tickShop:tickShop,settleT1:settleT1,calcTotalAssets:calcTotalAssets,randFloat:randFloat};
+log('[OK] M2 loaded','ok');
+
+/* ===== TESTS ===== */
+log('========== 时间系统重构测试 ==========','info');
+log('--- M1 数据层 ---','info');
+
+try {
+  var ss = M1.createShops();
+  if (ss.length !== 8) throw new Error('店铺数量应为8，实际' + ss.length);
+  log('✅ 创建8家店铺: ' + ss.map(function(s){return s.name}).join(', '), 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var gg = M1.createGame();
+  if (gg.money !== 100000) throw new Error('起始资金应为100000，实际' + gg.money);
+  if (gg.day !== 1) throw new Error('起始天数应为1，实际' + gg.day);
+  log('✅ 游戏状态: $' + gg.money + ', D' + gg.day, 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var d1 = M1.dayToDate(1);
+  if (d1.year !== 1 || d1.month !== 1 || d1.day !== 1) throw new Error(JSON.stringify(d1));
+  log('✅ D1 → Y1 M1 D1', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var d30 = M1.dayToDate(30);
+  if (d30.month !== 1 || d30.day !== 30) throw new Error('Y'+d30.month+'D'+d30.day);
+  log('✅ D30 → Y1 M1 D30', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var d31 = M1.dayToDate(31);
+  if (d31.month !== 2 || d31.day !== 1) throw new Error('Y'+d31.month+'D'+d31.day);
+  log('✅ D31 → Y1 M2 D1', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var d360 = M1.dayToDate(360);
+  if (d360.month !== 12 || d360.day !== 30) throw new Error('Y'+d360.month+'D'+d360.day);
+  log('✅ D360 → Y1 M12 D30', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var d365 = M1.dayToDate(365);
+  if (d365.month !== 12 || d365.day !== 5) throw new Error('期望Y1M12D5 实际 Y'+d365.month+'M'+d365.day+'D'+d365.day);
+  log('✅ D365 → Y1 M12 D5', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var d366 = M1.dayToDate(366);
+  if (d366.year !== 2 || d366.month !== 1 || d366.day !== 1) throw new Error(JSON.stringify(d366));
+  log('✅ D366 → Y2 M1 D1', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var f1 = M1.formatDate(1), f30 = M1.formatDate(30), f365 = M1.formatDate(365);
+  if (f1 !== 'Y1 M1 D1') throw new Error('f1=' + f1);
+  if (f30 !== 'Y1 M1 D30') throw new Error('f30=' + f30);
+  if (f365 !== 'Y1 M12 D5') throw new Error('f365=' + f365);
+  log('✅ formatDate: ' + f1 + ', ' + f30 + ', ' + f365, 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var w1 = M1.getWeekDay(1), w7 = M1.getWeekDay(7), w8 = M1.getWeekDay(8);
+  if (w1 !== 1 || w7 !== 7 || w8 !== 1) throw new Error(w1+','+w7+','+w8);
+  log('✅ 星期: D1=周一('+w1+'), D7=周日('+w7+'), D8=周一('+w8+')', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var sCoeff = M1.createShops()[0];
+  sCoeff.coeff = 2.0;
+  var g6 = M1.createGame();
+  g6.speed = 'day';
+  for (var w = 0; w < 6; w++) M2.tickDays([sCoeff], g6);
+  if (sCoeff.coeff >= 2.001) throw new Error('周一~周六系数不应变: ' + sCoeff.coeff.toFixed(4));
+  log('✅ 周一~周六: 系数不变 ' + sCoeff.coeff.toFixed(4), 'ok');
+  M2.tickDays([sCoeff], g6);
+  if (sCoeff.coeff >= 1.999) throw new Error('周日系数未回归: ' + sCoeff.coeff.toFixed(4));
+  log('✅ 经营系数周日回归: 2.0 → ' + sCoeff.coeff.toFixed(4), 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+log('--- M2 股价引擎 ---','info');
+
+try {
+  var sTest = M1.createShops()[0];
+  var oldP = sTest.price;
+  var gTest = M1.createGame();
+  gTest.speed = 'week';
+  M2.tickDays([sTest], gTest);
+  if (sTest.price <= 0) throw new Error('股价不能为负或零: ' + sTest.price.toFixed(2));
+  var chg = ((sTest.price / oldP) - 1) * 100;
+  log('✅ 推进一周: ' + sTest.name + ' $' + oldP + '→$' + sTest.price.toFixed(2) + ' (' + chg.toFixed(2) + '%)', 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var sAll = M1.createShops();
+  var gAll = M1.createGame();
+  gAll.speed = 'year';
+  var r = M2.tickDays(sAll, gAll);
+  if (r.length !== 8) throw new Error('记录数应为8');
+  if (gAll.day !== 366) throw new Error('天数应为366，实际' + gAll.day);
+  log('✅ 一年推进: ' + r.length + '条记录, 天数=' + gAll.day, 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+try {
+  var sAsset = M1.createShops();
+  var gAsset = M1.createGame();
+  sAsset[0].shares = 100;
+  sAsset[0].price = 50;
+  var a = M2.calcTotalAssets(gAsset, sAsset);
+  if (a.cash !== 100000) throw new Error('现金错');
+  if (a.holdings !== 5000) throw new Error('持仓错');
+  if (a.total !== 105000) throw new Error('总资产错');
+  log('✅ 总资产: 现金$' + a.cash + '+持仓$' + a.holdings + '=总计$' + a.total, 'ok');
+} catch(e) { log('❌ ' + e.message, 'err'); }
+
+log('<br>===== 全部测试完成 =====','info');
+</script>
+</body></html>

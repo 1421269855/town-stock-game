@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>测试</title>
+<style>
+body{font-family:sans-serif;padding:20px;background:#f0f0f0}
+.card{background:#fff;border-radius:10px;padding:15px;margin:8px 0;border-left:5px solid #4a90d9;cursor:pointer}
+.card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.name{font-size:18px;font-weight:bold}
+.info{font-size:13px;color:#666;margin-top:5px}
+.price{font-size:22px;font-weight:bold;color:#c0392b;margin-top:5px}
+#err{color:red;background:#fee;padding:10px;display:none}
+</style>
+</head>
+<body>
+<h2>小镇股票交易所 - 测试版</h2>
+<div id="err"></div>
+<div id="list"></div>
+
+<script>
+window.onerror=function(m){document.getElementById('err').style.display='block';document.getElementById('err').textContent='错误: '+m;return false;};
+
+var shops=[
+  {id:'a',icon:'🍜',name:'老王面馆',price:25},
+  {id:'b',icon:'💻',name:'萌科技',price:80},
+  {id:'c',icon:'🌸',name:'阿美花店',price:15},
+  {id:'d',icon:'🌾',name:'李氏农场',price:35},
+  {id:'e',icon:'💪',name:'铁壁健身房',price:42},
+  {id:'f',icon:'☕',name:'时光咖啡',price:18},
+  {id:'g',icon:'🛒',name:'好又多超市',price:55},
+  {id:'h',icon:'🏭',name:'梧桐纺织厂',price:30}
+];
+
+var html='';
+for(var i=0;i<shops.length;i++){
+  var s=shops[i];
+  html+='<div class="card" onclick="alert(\'你点击了 '+s.name+'\')">';
+  html+='<div class="name">'+s.icon+' '+s.name+'</div>';
+  html+='<div class="info">风险: 中 | 关系值: 30</div>';
+  html+='<div class="price">¥'+s.price+'</div>';
+  html+='</div>';
+}
+
+document.getElementById('list').innerHTML=html;
+document.title='OK-'+shops.length;
+console.log('DONE');
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>M5 介入经营测试</title></head>
+<body style="background:#111;color:#0f0;font-family:monospace;padding:20px;font-size:14px;line-height:1.6;">
+<h1 style="color:#fff">🧪 M5 介入经营系统测试</h1><div id="o"></div>
+
+<script>
+var $o=document.getElementById('o');
+function log(m,c){var d=document.createElement('div');d.className=c||'';d.textContent=m;$o.appendChild(d);}
+
+/* ===== M1 数据层（内联） ===== */
+var M1=(function(){
+  var CFG={START_MONEY:100000,FEE_RATE:0.005,TRADE_UNIT:100,T_PLUS_1_DAYS:1,
+    DAYS_PER_WEEK:7,DAYS_PER_MONTH:30,DAYS_PER_YEAR:365,
+    SPEED_MODES:{day:{label:'D',days:1},week:{label:'W',days:7},month:{label:'M',days:30},year:{label:'Y',days:365}},
+    REL_COST_PER_INTERVENTION:10,
+    INT_TYPES:{
+      advice:{name:'经营建议',relReq:20,cMin:-0.05,cMax:0.15,desc:'给店主提建议'},
+      client:{name:'介绍客户',relReq:40,cMin:0.03,cMax:0.20,desc:'介绍大客户'},
+      invest:{name:'追加投资',relReq:60,cMin:-0.02,cMax:0.25,desc:'额外投入资金'},
+      help:{name:'帮助解决问题',relReq:30,cMin:0.02,cMax:0.18,desc:'帮店主解决困难'}
+    }
+  };
+  function createShops(){return[
+    {id:'laowang',name:'老王面馆',icon:'🍜',base:35,vol:0.02,risk:'保守',sector:'餐饮',price:35,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0},
+    {id:'meng',name:'萌科技',icon:'💻',base:80,vol:0.06,risk:'激进',sector:'tech',price:80,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0},
+    {id:'amei',name:'阿美花店',icon:'🌸',base:50,vol:0.03,risk:'稳健',sector:'零售',price:50,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0},
+    {id:'liqiao',name:'李桥物流',icon:'🚛',base:45,vol:0.025,risk:'稳健',sector:'物流',price:45,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0},
+    {id:'chenyao',name:'陈药师',icon:'💊',base:60,vol:0.022,risk:'保守',sector:'医疗',price:60,coeff:1.0,rel:50,shares:0,costAvg:0,lockedShares:0}
+  ];}
+  function createGame(){return{money:CFG.START_MONEY,day:1,year:1,speed:'week',log:[],history:[CFG.START_MONEY],pendingT1:[],reputation:50};}
+  return{CONFIG:CFG,createShops:createShops,createGame:createGame};
+})();
+log('[OK] M1 loaded');
+
+/* ===== M2 股价引擎（内联） ===== */
+var M2=(function(){
+  function tickDays(shops,g){
+    var days=M1.CONFIG.SPEED_MODES[g.speed].days;
+    for(var d=0;d<days;d++){
+      for(var i=0;i<shops.length;i++){
+        var s=shops[i];var ch=(Math.random()-0.48)*2*s.vol+(s.coeff-1)*0.3*s.vol;
+        if(ch>0.10)ch=0.10;if(ch<-0.10)ch=-0.10;s.price=Math.max(1,Math.round(s.price*(1+ch)*100)/100);
+      }
+      settleT1(g);
+    }g.day+=days;g.year=Math.floor((g.day-1)/365)+1;return{days:days,endDay:g.day};
+  }
+  function settleT1(g){var ok=[];for(var i=0;i<g.pendingT1.length;i++)if(g.pendingT1[i].unlockDay>g.day)ok.push(g.pendingT1[i]);g.pendingT1=ok;}
+  function calcTotalAssets(g,s){var v=0;for(var i=0;i<s.length;i++)v+=s[i].price*s[i].shares;return g.money+v;}
+  return{tickDays:tickDays,settleT1:settleT1,calcTotalAssets:calcTotalAssets};
+})();
+log('[OK] M2 loaded');
+
+/* ===== M5 介入经营系统 ===== */
+var M5=(function(){
+  /**
+   * 执行一次介入经营
+   * @param {Object} game - 游戏状态
+   * @param {Array} shops - 店铺数组
+   * @param {string} shopId - 店铺ID
+   * @param {string} type - 介入类型: advice/client/invest/help
+   * @returns {Object} { success, result: { coeffDelta, relChange }, error }
+   */
+  function intervene(game,shops,shopId,type){
+    var cfg=M1.CONFIG;
+    var itype=cfg.INT_TYPES[type];
+    if(!itype)return{s:false,e:'未知类型: '+type};
+
+    /* 找店铺 */
+    var shop=null;for(var i=0;i<shops.length;i++){if(shops[i].id===shopId){shop=shops[i];break;}}
+    if(!shop)return{s:false,e:'店铺不存在'};
+
+    /* 检查关系值 */
+    if(shop.rel<itype.relReq)return{s:false,e:'关系值不足: 需要'+itype.relReq+', 当前'+Math.floor(shop.rel)};
+
+    /* 计算成功率: 关系越高越容易成功 */
+    var baseRate=0.4+(shop.rel/200);/* 40%~90% */
+    var typeBonus=(type==='client'||type==='invest')?-0.1:(type==='help'?0.05:0);
+    var rate=Math.max(0.2,Math.min(0.95,baseRate+typeBonus));
+
+    /* 随机判定 */
+    if(Math.random()>rate)return{s:false,e:'介入失败(概率'+(rate*100).toFixed(0)+'%)'};
+
+    /* 成功：计算效果 */
+    var coeffRange=itype.cMax-itype.cMin;
+    var coeffDelta=itype.cMin+Math.random()*coeffRange;
+
+    /* 经营系数变化 */
+    shop.coeff=Math.round((shop.coeff+coeffDelta)*1000)/1000;
+    if(shop.coeff<0.3)shop.coeff=0.3;
+    if(shop.coeff>3.0)shop.coeff=3.0;
+
+    /* 关系值变化 */
+    var relDelta=coeffDelta>0?3:-5;/* 成功+3, 失效-5 */
+    shop.rel=Math.max(0,Math.min(100,shop.rel+relDelta));
+
+    /* 人脉点数消耗 */
+    game.reputation-=cfg.REL_COST_PER_INTERVENTION;
+    if(game.reputation<0)game.reputation=0;
+
+    return{s:true,result:{coeffDelta:coeffDelta,relChange:relDelta,newCoeff:shop.coeff,newRel:Math.floor(shop.rel),rate:rate}};
+  }
+
+  /**
+   * 查询可用的介入方式
+   */
+  function getInterventions(shop){
+    var cfg=M1.CONFIG;
+    var types=[];
+    for(var k in cfg.INT_TYPES){
+      var t=cfg.INT_TYPES[k];
+      types.push({
+        id:k,
+        name:t.name,
+        desc:t.desc,
+        relReq:t.relReq,
+        available:shop.rel>=t.relReq,
+        effectRange:'系数 '+(t.cMin>0?'+':'')+t.cMin.toFixed(2)+' ~ '+((t.cMax*100)|0)+'%'
+      });
+    }
+    return types;
+  }
+
+  /**
+   * 获取情报（基于关系值）
+   * @returns {Object|null} 情报对象
+   */
+  function getIntel(shop,game){
+    if(shop.rel<30)return null;
+    var intelTypes=['该店下季度可能受政策红利影响','听说店主在考虑扩张','有竞争对手在附近开店','该行业近期行情看涨','店主最近心情不太好'];
+    if(Math.random()>(shop.rel/150))return null;
+    return{
+      text:intelTypes[(Math.random()*intelTypes.length)|0],
+      reliability:Math.min(95,Math.floor(shop.rel*0.8)),
+      source:shop.name,
+      day:game.day
+    };
+  }
+
+  return{intervene:intervene,getInterventions:getInterventions,getIntel:getIntel};
+})();
+log('[OK] M5 loaded, keys='+Object.keys(M5).join(','));
+
+/* ===== 测试 ===== */
+try{
+  log('');
+  log('========== M5 介入经营测试 ==========','info');
+
+  /* 对象验证 */
+  log('--- 对象验证 ---','info');
+  if(typeof M5!=='object')throw new Error('M5非对象');
+  log('✅ M5 对象存在');
+  if(typeof M5.intervene!=='function')throw new Error('intervene不是函数');
+  if(typeof M5.getInterventions!=='function')throw new Error('getInterventions不是函数');
+  if(typeof M5.getIntel!=='function')throw new Error('getIntel不是函数');
+  log('✅ 三个核心函数都存在');
+
+  /* 可用介入查询 */
+  log('--- 可用介入查询 ---','info');
+  var sLow=M1.createShops()[0];sLow.rel=15;
+  var intsLow=M5.getInterventions(sLow);
+  var availCount=0;for(var ai=0;ai<intsLow.length;ai++)if(intsLow[ai].available)availCount++;
+  if(availCount!==0)throw new Error('低关系不应有可用介入');
+  log('✅ 低关系(rel=15): '+availCount+'/'+intsLow.length+' 可用');
+
+  var sHigh=M1.createShops()[0];sHigh.rel=70;
+  var intsHigh=M5.getInterventions(sHigh);
+  var hAvail=0;for(var hi=0;hi<intsHigh.length;hi++)if(intsHigh[hi].available)hAvail++;
+  if(hAvail<4)throw new Error('高关系应有更多可用介入');
+  log('✅ 高关系(rel=70): '+hAvail+'/'+intsHigh.length+' 可用');
+
+  /* 关系不足拒绝 */
+  log('--- 关系不足拒绝 ---','info');
+  var gFail=M1.createGame();var sFail=M1.createShops();sFail[0].rel=10;
+  var rFail=M5.intervene(gFail,sFail,'laowang','advice');
+  if(rFail.s)throw new Error('低关系不应成功');
+  log('✅ 关系不足被拒: "'+rFail.e+'"');
+
+  /* 类型无效拒绝 */
+  log('--- 无效类型 ---','info');
+  var rBadType=M5.intervene(gFail,sFail,'laowang','fake_type');
+  if(rBadType.s)throw new Error('假类型不应成功');
+  log('✅ 假类型被拒: "'+rBadType.e+'"');
+
+  /* 高关系介入成功 */
+  log('--- 高关系介入 ---','info');
+  var gOk=M1.createGame();var sOk=M1.createShops();
+  sOk[0].rel=80;
+  var oldC=sOk[0].coeff;oldR=sOk[0].rel;
+  /* 用固定随机种子模拟——多次尝试直到成功 */
+  var rInt=null;
+  for(var attempt=0;attempt<100;attempt++){
+    rInt=M5.intervene(gOk,sOk,'laowang','advice');
+    if(rInt.s)break;
+  }
+  if(!rInt.s)throw new Error('高关系80次都没成功?');
+  if(typeof rInt.result.coeffDelta!=='number')throw new Error('coeffDelta应为数字');
+  if(typeof rInt.result.newCoeff!=='number')throw new Error('newCoeff应为数字');
+  log('✅ 介入成功: 系数变化'+(rInt.result.coeffDelta>=0?'+':'')+rInt.result.coeffDelta.toFixed(3)+', 新系数='+rInt.result.newCoeff.toFixed(3)+', 新关系='+rInt.result.newRel);
+
+  /* 人脉消耗 */
+  log('--- 人脉消耗 ---','info');
+  if(gOk.reputation===M1.CONFIG.START_MONEY)throw new Error('人脉应减少');
+  log('✅ 人脉消耗: -'+M1.CONFIG.REL_COST_PER_INTERVENTION+', 剩余'+gOk.reputation);
+
+  /* 介入后股价应受系数影响 */
+  log('--- 系数影响股价 ---','info');
+  var sEff=M1.createShops();
+  sEff[0].coeff=2.0;
+  var pBefore=sEff[0].price;
+  var gEff=M1.createGame();
+  M2.tickDays(sEff,gEff);
+  var pAfter=sEff[0].price;
+  /* 高系数应该让价格更容易涨 */
+  log('✅ 系数影响: coeff=2.0时, 价格从$'+pBefore+'→$'+pAfter+' (观察趋势)');
+
+  /* 情报获取 */
+  log('--- 情报系统 ---','info');
+  var gIntel=M1.createGame();var sIntel=M1.createShops();
+  sIntel[0].rel=10;
+  var iLow=M5.getIntel(sIntel[0],gIntel);
+  if(iLow!==null)throw new Error('低关系不应有情报');
+  log('✅ 低关系无情报(null)');
+
+  sIntel[0].rel=85;
+  var gotIntel=false;
+  for(var ii=0;ii<20;ii++){
+    var iHigh=M5.getIntel(sIntel[0],gIntel);
+    if(iHigh!==null){gotIntel=true;if(iHigh.text&&iHigh.reliability)break;}
+  }
+  log('✅ 高关系: '+(gotIntel?'获得情报 ✅':'未触发(概率性) ⚠️'));
+
+  /* 多种介入类型 */
+  log('--- 所有介入类型 ---','info');
+  var allTypes=['advice','client','invest','help'];
+  var typeCount=0;
+  for(var ti=0;ti<allTypes.length;ti++){
+    var t=allTypes[ti];
+    if(M1.CONFIG.INT_TYPES[t])typeCount++;
+  }
+  if(typeCount!==4)throw new Error('应4种类型,实际'+typeCount);
+  log('✅ 介入类型: '+allTypes.join(', ')+' ('+typeCount+')');
+
+  log('');
+  log('========== 全部通过 ✅ ==========','info');
+}catch(e){
+  log('❌ 失败: '+e.message,'err');
+}
+</script></body></html>

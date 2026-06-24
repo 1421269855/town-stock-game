@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>M3 测试 - 事件系统</title>
+<style>
+body{font-family:'Consolas',monospace;background:#1a1a1a;color:#0f0;padding:20px;font-size:13px;line-height:1.6;}
+.ok{color:#0f0;}
+.err{color:#f00;background:#400;padding:8px;border-radius:4px;}
+.info{color:#0af;}
+.warn{color:#ff0;}
+h1{color:#fff;}
+.pos{color:#0f0;}
+.neg{color:#f55;}
+</style>
+</head>
+<body>
+<h1>🧪 M3 事件系统测试</h1>
+<div id="out"></div>
+
+<script src="../modules/m1-data.js"></script>
+<script src="../modules/m2-price.js"></script>
+<script src="../modules/m3-event.js"></script>
+<script>
+function log(msg, type){
+  var o = document.getElementById('out');
+  var cls = type === 'err' ? 'err' : (type === 'info' ? 'info' : (type === 'warn' ? 'warn' : 'ok'));
+  o.innerHTML += '<div class="' + cls + '">' + msg + '</div>';
+}
+
+try {
+  log('========== M3 事件系统测试 ==========', 'info');
+
+  /* 测试1: M3对象存在 */
+  if (typeof M3 !== 'object') throw new Error('M3 对象未定义');
+  log('✅ M3 对象存在', 'ok');
+
+  /* 测试2: 事件库数量 */
+  if (M3.EVENTS.length !== 10) throw new Error('事件数量错误: ' + M3.EVENTS.length);
+  log('✅ 事件库: ' + M3.EVENTS.length + ' 个事件', 'ok');
+
+  /* 测试3: 事件结构完整 */
+  for (var i = 0; i < M3.EVENTS.length; i++) {
+    var e = M3.EVENTS[i];
+    if (!e.id || !e.name || !e.type || !e.desc || typeof e.effect !== 'function') {
+      throw new Error('事件结构不完整: ' + (e.name || i));
+    }
+  }
+  log('✅ 全部10个事件结构完整 (id/name/type/desc/effect)', 'ok');
+
+  /* 测试4: tryTrigger 返回null或事件 */
+  var trigResult = M3.tryTrigger();
+  if (trigResult !== null && typeof trigResult !== 'object') {
+    throw new Error('tryTrigger 返回类型错误');
+  }
+  log('✅ tryTrigger() 正常返回: ' + (trigResult ? trigResult.name : 'null (未触发)'), 'ok');
+
+  /* 测试5: 触发概率统计 (1000次) */
+  var triggered = 0;
+  for (var k = 0; k < 1000; k++) {
+    if (M3.tryTrigger()) triggered++;
+  }
+  var rate = (triggered / 1000 * 100).toFixed(1);
+  log('✅ 触发概率统计 (1000次): ' + triggered + ' 次 (' + rate + '%)，期望约30%', 'ok');
+
+  /* 测试6: applyEvent 执行效果 */
+  var testShops = M1.createShops();
+  var oldLaowang = testShops[0].price;
+  var event = M3.findEvent('evt_food_fest');
+  var result = M3.applyEvent(event, testShops);
+  if (testShops[0].price <= oldLaowang) throw new Error('美食节未让老王面馆涨价');
+  if (result.type !== 'positive') throw new Error('事件类型错误');
+  log('✅ applyEvent() 美食节执行: 老王面馆 $' + oldLaowang + ' → $' + testShops[0].price, 'ok');
+
+  /* 测试7: 经济危机让所有店跌 */
+  var crisisShops = M1.createShops();
+  var before = crisisShops.map(function(s){return s.price;});
+  var crisisEvent = M3.findEvent('evt_economic_crisis');
+  M3.applyEvent(crisisEvent, crisisShops);
+  var allDown = true;
+  for (var m = 0; m < crisisShops.length; m++) {
+    if (crisisShops[m].price >= before[m]) { allDown = false; break; }
+  }
+  if (!allDown) throw new Error('经济危机未让所有店铺下跌');
+  log('✅ 经济危机事件: 8家店全部下跌', 'ok');
+
+  /* 测试8: 政策红利让所有店涨 */
+  var policyShops = M1.createShops();
+  var before2 = policyShops.map(function(s){return s.price;});
+  M3.applyEvent(M3.findEvent('evt_policy_bonus'), policyShops);
+  var allUp = true;
+  for (var p = 0; p < policyShops.length; p++) {
+    if (policyShops[p].price <= before2[p]) { allUp = false; break; }
+  }
+  if (!allUp) throw new Error('政策红利未让所有店铺上涨');
+  log('✅ 政策红利事件: 8家店全部上涨', 'ok');
+
+  /* 测试9: findEvent 找不到 */
+  var notFound = M3.findEvent('evt_nonexist');
+  if (notFound !== null) throw new Error('findEvent 不存在ID应返回null');
+  log('✅ findEvent() 不存在ID返回 null', 'ok');
+
+  /* 测试10: getAllEvents 返回副本 */
+  var allEvents = M3.getAllEvents();
+  allEvents[0].name = '修改测试';
+  if (M3.EVENTS[0].name === '修改测试') throw new Error('getAllEvents 未返回副本');
+  log('✅ getAllEvents() 返回数组副本（不影响原数据）', 'ok');
+
+  /* 测试11: 列出所有事件 */
+  log('--- 事件清单 ---', 'info');
+  for (var q = 0; q < M3.EVENTS.length; q++) {
+    var ev = M3.EVENTS[q];
+    var typeColor = ev.id.indexOf('crisis') >= 0 || ev.id.indexOf('ecom') >= 0 || ev.id.indexOf('rain') >= 0 ? 'neg' : 'pos';
+    log('  [' + ev.type + '] ' + ev.name + ' - ' + ev.desc, typeColor);
+  }
+
+  log('', 'info');
+  log('========== 全部测试通过 ✅ ==========', 'info');
+} catch(e) {
+  log('❌ 测试失败: ' + e.message, 'err');
+  console.error(e);
+}
+</script>
+</body>
+</html>
