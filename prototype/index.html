@@ -215,6 +215,16 @@ td{color:#e6edf3}
   .start-box{padding:20px 16px;max-width:95vw !important}
 }
   </style>
+  <!-- 百度统计 -->
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?5686d01905971641d1d7d1eabfbcc3ed7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+  </script>
 </head>
 <body>
 <!-- PWA manifest (内联，避免额外请求) -->
@@ -1408,6 +1418,7 @@ function importAllSaves(input) {
 
 /* ========== START SCREEN ========== */
 function doStartGame() {
+  trackEvent('游戏', '开始', '新游戏/继续');
   CURRENT_SLOT = 1;
   /* 如果有存档，用第一个有数据的槽位 */
   for (var i = 1; i <= 3; i++) {
@@ -2906,6 +2917,12 @@ function _getAudioCtx() {
   if (!_audioCtx) { try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
   return _audioCtx;
 }
+/* ========== 百度统计事件跟踪 ========== */
+function trackEvent(category, action, label) {
+  if (typeof _hmt !== 'undefined' && _hmt) {
+    _hmt.push(['_trackEvent', category, action, label || '']);
+  }
+}
 function _soundEnabled() {
   try { var c = JSON.parse(localStorage.getItem('townStockSettings'))||{}; return c.sound === 'on'; } catch(e) { return false; }
 }
@@ -3067,6 +3084,7 @@ function doShort() {
   G.tradeHistory.push({day:G.day, shopId:currentShop.id, type:'short', price:currentShop.price, shares:amt});
   playSound('short');
   triggerTradeFlash('rgba(240,136,62,0.5)');
+  trackEvent('交易', '做空', currentShop.name);
   hideMod('shortModal');
   renderAll();
   saveGame();
@@ -3121,6 +3139,7 @@ function doBuy() {
   checkMission(G, S, 'trade', currentShop.price * amt);
   playSound('buy');
   triggerTradeFlash('rgba(35,134,54,0.5)');
+  trackEvent('交易', '买入', currentShop.name);
   hideMod('buyModal');
   renderAll();
   saveGame();
@@ -3140,6 +3159,7 @@ function doSell() {
   checkMission(G, S, 'trade', currentShop.price * amt);
   playSound('sell');
   triggerTradeFlash(profit >= 0 ? 'rgba(248,81,73,0.5)' : 'rgba(63,185,80,0.5)');
+  trackEvent('交易', '卖出', currentShop.name + (profit >= 0 ? '(赚)' : '(亏)'));
   hideMod('sellModal');
   renderAll();
   saveGame();
@@ -3202,6 +3222,7 @@ function runInt(sid, type) {
 var _advanceChoices = null;  /* {evt:..., chosenIdx:...} 等待玩家选择 */
 function doAdvance() {
   try {
+    trackEvent('游戏', '推进', '第' + (G.day + 1) + '天');
     /* 阶段1：如果上次触发了带选择的事件且玩家已选择 */
     if (_advanceChoices) {
       var ac = _advanceChoices;
@@ -3486,6 +3507,7 @@ function checkAchievements() {
 }
 function showAchievePopup(ach) {
   playSound('achieve');
+  trackEvent('成就', '解锁', ach.name);
   var pop = document.createElement('div');
   pop.className = 'achieve-popup';
   pop.innerHTML = ach.icon + ' 达成成就：「' + ach.name + '」';
