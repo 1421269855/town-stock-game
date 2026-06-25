@@ -50,7 +50,7 @@ body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,BlinkMacSystemFo
 .card-short{border-color:#f0883e !important;background:linear-gradient(135deg,#161b22 60%,rgba(240,136,62,0.08))}
 .card-short::after{content:'🔻做空';position:absolute;top:6px;right:8px;font-size:10px;color:#f0883e;background:rgba(240,136,62,0.15);padding:1px 6px;border-radius:4px}
 .tag-bankrupt{background:rgba(240,136,62,0.15);color:#f0883e;border:1px solid rgba(240,136,62,0.3)}
-.detail-panel{background:#161b22;border-top:2px solid #21262d;padding:14px 16px;display:none}
+.detail-panel{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;display:none;overflow:hidden}
 .detail-panel.show{display:block}
 .detail-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
 .detail-header h3{font-size:18px;color:#e6edf3}
@@ -107,6 +107,12 @@ td{color:#e6edf3}
 @keyframes flashDown{0%{background:#1a3a1a}50%{background:#3fb95033}100%{background:transparent}}
 .flash-up{animation:flashUp 0.6s ease-out}
 .flash-down{animation:flashDown 0.6s ease-out}
+
+.ach-card{cursor:pointer;transition:.15s;position:relative}
+.ach-card:hover{transform:translateY(-2px);box-shadow:0 2px 12px rgba(210,153,34,0.25)}
+.ach-card.ach-active{animation:pulse 2s infinite}
+.ach-card.ach-locked{cursor:default}
+.ach-card.ach-locked:hover{transform:none;box-shadow:none}
 
 /* Toast notifications */
 @keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
@@ -213,7 +219,81 @@ td{color:#e6edf3}
   .chart-area{height:110px}
   .modal{padding:12px;max-width:95vw !important}
   .start-box{padding:20px 16px;max-width:95vw !important}
+  .ending-icon{font-size:48px}
+  .ending-title{font-size:22px}
+  .ending-sub{font-size:12px}
+  .ending-stats{gap:6px}
+  .ending-stat{min-width:70px;padding:6px 10px}
+  .ending-stat .es-val{font-size:15px}
+  .ending-btns button{font-size:13px;padding:8px 20px}
 }
+/* ========== ENDING SCREENS ========== */
+.ending-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+.ending-overlay.show{display:flex}
+.ending-bankrupt{background:linear-gradient(180deg,#1a0a0a 0%,#0d1117 100%)}
+.ending-millionaire{background:linear-gradient(180deg,#1a1a0a 0%,#0d1117 100%)}
+.ending-icon{font-size:72px;line-height:1.2;margin-bottom:12px}
+.ending-title{font-size:28px;font-weight:700;margin-bottom:6px}
+.ending-sub{font-size:14px;color:#8b949e;margin-bottom:4px;line-height:1.5}
+.ending-stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0;max-width:500px}
+.ending-stat{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 16px;min-width:90px}
+.ending-stat .es-val{font-size:18px;font-weight:700;color:#e6edf3}
+.ending-stat .es-label{font-size:11px;color:#8b949e;margin-top:2px}
+.ending-btns{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+.ending-btns button{font-size:15px;padding:10px 28px;border-radius:10px;border:none;cursor:pointer;font-weight:600;transition:all .15s}
+.ending-btns .btn-restart{background:#3fb950;color:#0d1117}
+.ending-btns .btn-restart:hover{background:#56d364}
+.ending-btns .btn-continue{background:#21262d;color:#c9d1d9;border:1px solid #30363d}
+.ending-btns .btn-continue:hover{background:#30363d}
+
+/* ========== STORE ========== */
+.store-cat{margin-bottom:16px}
+.store-cat-title{font-size:14px;font-weight:700;color:#e6edf3;padding:10px 16px 6px;border-bottom:1px solid #21262d;margin-bottom:8px}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;padding:0 16px}
+.store-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.store-card:hover{border-color:#58a6ff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(88,166,255,0.1)}
+.store-card.owned{opacity:0.5;cursor:default;border-color:#30363d;transform:none;box-shadow:none}
+.store-card.owned:hover{border-color:#30363d;transform:none;box-shadow:none}
+.store-card.owned::after{content:'✔ 已拥有';position:absolute;top:6px;right:6px;font-size:10px;color:#3fb950;background:rgba(63,185,80,0.12);padding:2px 6px;border-radius:4px}
+.store-card-icon{font-size:28px;margin-bottom:6px}
+.store-card-name{font-size:13px;font-weight:600;color:#e6edf3;margin-bottom:4px}
+.store-card-price{font-size:12px;color:#8b949e;margin-bottom:4px}
+.store-card-rp{font-size:11px;color:#d29922}
+.store-card-cant{font-size:11px;color:#f85149;margin-top:4px}
+/* leaderboard */
+.lb-podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:20px 8px 12px;margin-bottom:10px}
+.lb-podium-item{text-align:center;min-width:70px;flex:1;max-width:100px}
+.lb-podium-bar{border-radius:8px 8px 0 0;margin:0 auto;transition:all .3s}
+.lb-podium-name{font-size:14px;color:#c9d1d9;margin-top:6px;font-weight:600}
+.lb-podium-assets{font-size:14px;color:#d29922;margin-top:2px;font-weight:700}
+.lb-row{display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid #21262d;transition:background .15s}
+.lb-row:hover{background:#161b22}
+.lb-rank{width:32px;text-align:center;font-size:16px;font-weight:700}
+.lb-rank.gold{color:#ffd700}.lb-rank.silver{color:#c0c0c0}.lb-rank.bronze{color:#cd7f32}
+.lb-name{flex:1;font-size:14px;color:#e6edf3;font-weight:500}
+.lb-assets{font-size:15px;color:#8b949e;white-space:nowrap;font-weight:600}
+.lb-player{background:rgba(63,185,80,.08) !important;border-left:3px solid #3fb950}
+.lb-player .lb-name{color:#3fb950}
+.lb-player .lb-assets{color:#3fb950;font-weight:600}
+.lb-new-badge{display:inline-block;background:#3fb950;color:#0d1117;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:6px;font-weight:700}
+.lb-total{text-align:center;padding:10px;color:#8b949e;font-size:12px;margin-top:6px;border-top:1px solid #21262d}
+
+@media(max-width:480px){
+  .store-grid{grid-template-columns:repeat(2,1fr);gap:6px;padding:0 8px}
+  .store-card{padding:10px 8px}
+  .store-card-icon{font-size:22px}
+  .store-card-name{font-size:11px}
+  .store-card-price{font-size:10px}
+  .store-card-rp{font-size:10px}
+  .lb-podium{gap:4px;padding:16px 2px 10px}
+  .lb-podium-item{min-width:55px;max-width:80px}
+  .lb-podium-name{font-size:10px}
+  .lb-podium-assets{font-size:9px}
+  .lb-row{padding:6px 8px}
+  .lb-name{font-size:11px}
+  .lb-assets{font-size:10px}
+}
+
   </style>
 </head>
 <body>
@@ -315,6 +395,8 @@ td{color:#e6edf3}
   <div class="tab" data-t="stats" onclick="switchTab('stats')">📊 统计</div>
   <div class="tab" data-t="missions" onclick="switchTab('missions')">🎯 任务</div>
   <div class="tab" data-t="assets" onclick="switchTab('assets')">📈 资产走势</div>
+  <div class="tab" data-t="store" onclick="switchTab('store')">🏬 商店</div>
+  <div class="tab" data-t="leaderboard" onclick="switchTab('leaderboard')">🏆 排行榜</div>
   <div class="speeds">
     <span class="on" data-sp="day" onclick="setSp(this)">日</span>
     <span data-sp="week" onclick="setSp(this)">周</span>
@@ -367,7 +449,13 @@ td{color:#e6edf3}
   </div>
 </div>
 
-<div class="detail-panel" id="detailPanel"></div>
+<div id="contentStore" style="display:none">
+  <div id="storeArea" style="padding:8px 0 16px"></div>
+</div>
+
+<div id="contentLeaderboard" style="display:none">
+  <div id="lbArea" style="padding:8px 0 16px"></div>
+</div>
 
 <button class="adv-btn" onclick="doAdvance()">⏭ 推进时间</button>
 
@@ -540,6 +628,29 @@ td{color:#e6edf3}
     <div style="margin-top:12px;text-align:center">
       <button onclick="_onEventChoiceIgnore()" class="btn btn-sm" style="background:#21262d;color:#8b949e;border-color:#30363d;font-size:11px;padding:4px 18px">忽略（系统代决策）</button>
     </div>
+  </div>
+</div>
+
+<!-- ========== ENDING: BANKRUPT ========== -->
+<div class="ending-overlay ending-bankrupt" id="bankruptScreen">
+  <div class="ending-icon">💔</div>
+  <div class="ending-title" style="color:#f85149">破产了...</div>
+  <div class="ending-sub" id="bankruptSub"></div>
+  <div class="ending-stats" id="bankruptStats"></div>
+  <div class="ending-btns">
+    <button class="btn-restart" onclick="_doRestartGame()">重新开始</button>
+  </div>
+</div>
+
+<!-- ========== ENDING: MILLIONAIRE ========== -->
+<div class="ending-overlay ending-millionaire" id="millionaireScreen">
+  <div class="ending-icon">👑</div>
+  <div class="ending-title" style="color:#d29922">小镇传奇！</div>
+  <div class="ending-sub" id="millionaireSub"></div>
+  <div class="ending-stats" id="millionaireStats"></div>
+  <div class="ending-btns">
+    <button class="btn-restart" onclick="_doRestartGame()">重新开始</button>
+    <button class="btn-continue" onclick="_dismissEnding('millionaireScreen')">继续游玩</button>
   </div>
 </div>
 
@@ -762,6 +873,67 @@ var CFG = {
   ]
 };
 
+/* ========== STORE ITEMS ========== */
+var STORE_ITEMS = [
+  /* 房产类 */
+  {id:'house_01', cat:'🏠 房产', name:'老旧单间',    icon:'🏚️', price:3000,    rp:2},
+  {id:'house_02', cat:'🏠 房产', name:'小镇公寓',    icon:'🏢', price:8000,    rp:6},
+  {id:'house_03', cat:'🏠 房产', name:'城郊联排别墅', icon:'🏘️', price:25000,   rp:18},
+  {id:'house_04', cat:'🏠 房产', name:'商铺门面',    icon:'🏪', price:60000,   rp:40},
+  {id:'house_05', cat:'🏠 房产', name:'高层公寓',    icon:'🏬', price:120000,  rp:75},
+  {id:'house_06', cat:'🏠 房产', name:'花园别墅',    icon:'🏡', price:250000,  rp:150},
+  {id:'house_07', cat:'🏠 房产', name:'湖景庄园',    icon:'🏰', price:600000,  rp:300},
+  {id:'house_08', cat:'🏠 房产', name:'山顶豪宅',    icon:'⛰️', price:1200000, rp:550},
+  {id:'house_09', cat:'🏠 房产', name:'商业大厦',    icon:'🏗️', price:3500000, rp:1200},
+  {id:'house_10', cat:'🏠 房产', name:'市中心地标',  icon:'🌆', price:10000000,rp:3000},
+  /* 车辆类 */
+  {id:'car_01', cat:'🚗 车辆', name:'二手自行车',    icon:'🚲', price:1000,    rp:1},
+  {id:'car_02', cat:'🚗 车辆', name:'二手摩托',      icon:'🛵', price:5000,    rp:4},
+  {id:'car_03', cat:'🚗 车辆', name:'国产经济轿车',  icon:'🚙', price:20000,   rp:14},
+  {id:'car_04', cat:'🚗 车辆', name:'合资中端轿车',  icon:'🚗', price:55000,   rp:35},
+  {id:'car_05', cat:'🚗 车辆', name:'进口豪华SUV',   icon:'🚙', price:150000,  rp:90},
+  {id:'car_06', cat:'🚗 车辆', name:'经典老爷车',    icon:'🏎️', price:350000,  rp:180},
+  {id:'car_07', cat:'🚗 车辆', name:'超级跑车',      icon:'🏎️', price:800000,  rp:350},
+  {id:'car_08', cat:'🚗 车辆', name:'加长豪华礼宾车',icon:'🚌', price:2000000, rp:700},
+  {id:'car_09', cat:'🚗 车辆', name:'私人直升机',    icon:'🚁', price:5000000, rp:1500},
+  {id:'car_10', cat:'🚗 车辆', name:'私人喷气机',    icon:'✈️', price:15000000,rp:4000},
+  /* 奢侈品类 */
+  {id:'lux_01', cat:'💎 奢侈品', name:'品牌墨镜',      icon:'🕶️', price:2000,    rp:2},
+  {id:'lux_02', cat:'💎 奢侈品', name:'设计师手袋',    icon:'👜', price:12000,   rp:10},
+  {id:'lux_03', cat:'💎 奢侈品', name:'限量球鞋收藏',  icon:'👟', price:35000,   rp:22},
+  {id:'lux_04', cat:'💎 奢侈品', name:'高端音响',      icon:'🔊', price:80000,   rp:50},
+  {id:'lux_05', cat:'💎 奢侈品', name:'瑞士名表',      icon:'⌚', price:180000,  rp:110},
+  {id:'lux_06', cat:'💎 奢侈品', name:'钻石项链',      icon:'💎', price:400000,  rp:200},
+  {id:'lux_07', cat:'💎 奢侈品', name:'名画收藏',      icon:'🖼️', price:1000000, rp:450},
+  {id:'lux_08', cat:'💎 奢侈品', name:'古董收藏品',    icon:'🏺', price:2500000, rp:900},
+  {id:'lux_09', cat:'💎 奢侈品', name:'豪华游艇',      icon:'🛥️', price:8000000, rp:2500},
+  {id:'lux_10', cat:'💎 奢侈品', name:'私人岛屿',      icon:'🏝️', price:25000000,rp:6000},
+  /* 企业投资类 */
+  {id:'biz_01', cat:'🏢 企业投资', name:'街边小摊',        icon:'🛒', price:5000,    rp:4},
+  {id:'biz_02', cat:'🏢 企业投资', name:'咖啡店股份',      icon:'☕', price:60000,   rp:40},
+  {id:'biz_03', cat:'🏢 企业投资', name:'连锁健身房',      icon:'🏋️', price:200000,  rp:110},
+  {id:'biz_04', cat:'🏢 企业投资', name:'网红餐厅',        icon:'🍽️', price:500000,  rp:240},
+  {id:'biz_05', cat:'🏢 企业投资', name:'物流公司',        icon:'🚚', price:1200000, rp:500},
+  {id:'biz_06', cat:'🏢 企业投资', name:'科技初创公司',    icon:'💻', price:3000000, rp:1000},
+  {id:'biz_07', cat:'🏢 企业投资', name:'房地产开发商',    icon:'🏗️', price:8000000, rp:2200},
+  {id:'biz_08', cat:'🏢 企业投资', name:'影视制作公司',    icon:'🎬', price:18000000,rp:4500},
+  {id:'biz_09', cat:'🏢 企业投资', name:'上市集团董事会席位',icon:'🏛️', price:40000000,rp:8000},
+  {id:'biz_10', cat:'🏢 企业投资', name:'跨国财团控股权',  icon:'🌍', price:80000000,rp:15000}
+];
+
+var LEADERBOARD_NPC = [
+  {rank:1,  name:'赵半城',  title:'首富',     assets:5000000000, volatility:0.03},
+  {rank:2,  name:'钱百万',  title:'地产大亨', assets:2000000000, volatility:0.04},
+  {rank:3,  name:'孙金条',  title:'金融巨头', assets:1000000000, volatility:0.05},
+  {rank:4,  name:'李掌柜',  title:'商会会长', assets:500000000,  volatility:0.06},
+  {rank:5,  name:'周老板',  title:'实业家',   assets:200000000,  volatility:0.07},
+  {rank:6,  name:'吴大富',  title:'投资家',   assets:80000000,   volatility:0.08},
+  {rank:7,  name:'郑富裕',  title:'新锐富豪', assets:30000000,   volatility:0.09},
+  {rank:8,  name:'王有钱',  title:'精明商人', assets:10000000,   volatility:0.10},
+  {rank:9,  name:'刘财运',  title:'幸运之星', assets:3000000,    volatility:0.11},
+  {rank:10, name:'陈小康',  title:'后起之秀', assets:500000,     volatility:0.12}
+];
+
 /* ========== DATE UTILS ========== */
 function dayToDate(d) {
   var year = Math.floor((d - 1) / CFG.DAYS_PER_YEAR) + 1;
@@ -894,7 +1066,12 @@ function createGame() {
     nextIpoDay: 200 + Math.floor(Math.random() * 150),
     usedIpoIds: [],
     tradeHistory: [],
-    winStreak: 0, loseStreak: 0
+    winStreak: 0, loseStreak: 0,
+    peakAssets: CFG.START_MONEY,
+    _bankruptShown: false, _millionaireShown: false,
+    _lb_npc_assets: null,
+    storeItems: [],
+    activeTitle: null   /* 玩家选择的佩戴称号（成就ID），null=自动按资产 */
   };
   /* 预生成30天资产历史 */
   var PRE_DAYS = 30;
@@ -1349,6 +1526,7 @@ function saveGame() {
     try { var old = JSON.parse(localStorage.getItem(getSlotKey())||'{}'); if(old.name) existName = old.name; } catch(e){}
     var data = { G: G, S: S, savedAt: Date.now(), name: existName };
     localStorage.setItem(getSlotKey(), JSON.stringify(data));
+    checkEndings();
   } catch(e) { /* 存储满了，静默忽略 */ }
 }
 function loadGame() {
@@ -1457,7 +1635,7 @@ function renderSlotList() {
       html += '<div style="position:relative;border:1px solid #238636;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;background:#0d1117" onclick="startSlot('+s.slot+')">' +
         '<button onclick="event.stopPropagation();showDelConfirm('+s.slot+')" style="position:absolute;top:6px;right:6px;background:none;border:1px solid #f85149;color:#f85149;font-size:16px;cursor:pointer;width:28px;height:28px;border-radius:4px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center" title="删除此存档">×</button>' +
         '<div style="font-weight:600;font-size:13px;color:#c9d1d9;margin-bottom:4px;padding-right:32px">' + displayName + ' · D'+s.day+'</div>' +
-        '<div style="color:#8b949e;font-size:11px">💰 ¥' + (s.assets/10000).toFixed(1) + 'w · ' + t + '</div></div>';
+        '<div style="color:#8b949e;font-size:11px">💰 ' + fmtMoney(s.assets) + ' · ' + t + '</div></div>';
     } else {
       html += '<div class="slot-preview" onclick="startSlot('+s.slot+')" style="cursor:pointer;opacity:0.6">' +
         '<div class="slot-title">槽位 '+s.slot+' · 空闲</div>' +
@@ -1488,7 +1666,7 @@ function updateStartPreview() {
       var d = new Date(s.savedAt);
       var t = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
       var displayName = s.name ? s.name : ('存档 '+s.slot);
-      html += '<div class="slot-preview"><div class="slot-title">' + displayName + ' · D'+s.day+'</div><div class="slot-info">💰 ¥'+(s.assets/10000).toFixed(1)+'w · '+t+'</div></div>';
+      html += '<div class="slot-preview"><div class="slot-title">' + displayName + ' · D'+s.day+'</div><div class="slot-info">💰 '+fmtMoney(s.assets)+' · '+t+'</div></div>';
     }
   }
   $('slotPreview').innerHTML = html;
@@ -1506,7 +1684,7 @@ function updateStartPreview() {
       var d = new Date(s.savedAt);
       var t = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
       var displayName = s.name ? s.name : ('存档 '+s.slot);
-      html += '<div class="slot-preview"><div class="slot-title">' + displayName + ' · D'+s.day+'</div><div class="slot-info">💰 ¥'+(s.assets/10000).toFixed(1)+'w · '+t+'</div></div>';
+      html += '<div class="slot-preview"><div class="slot-title">' + displayName + ' · D'+s.day+'</div><div class="slot-info">💰 '+fmtMoney(s.assets)+' · '+t+'</div></div>';
     }
   }
   $('slotPreview').innerHTML = html;
@@ -1614,6 +1792,17 @@ function initGame() {
       if (G.tradeCount === undefined) G.tradeCount = 0;
       if (G.winCount === undefined) G.winCount = 0;
       if (G.maxWin === undefined) G.maxWin = 0;
+      if (G.peakAssets === undefined) G.peakAssets = CFG.START_MONEY;
+      if (G._bankruptShown === undefined) G._bankruptShown = false;
+      if (G._millionaireShown === undefined) G._millionaireShown = false;
+      if (G.storeItems === undefined) G.storeItems = [];
+      if (G.activeTitle === undefined) G.activeTitle = null;
+      if (G._lb_npc_assets === undefined || G._lb_npc_assets === null) {
+        G._lb_npc_assets = [];
+        for (var _i = 0; _i < LEADERBOARD_NPC.length; _i++) {
+          G._lb_npc_assets.push({name:LEADERBOARD_NPC[_i].name, title:LEADERBOARD_NPC[_i].title, assets:LEADERBOARD_NPC[_i].assets, vol:LEADERBOARD_NPC[_i].volatility});
+        }
+      }
       $('errBar').innerHTML = '<span style="color:#3fb950">📂 已读取存档 (槽位' + CURRENT_SLOT + ' D' + G.day + ')</span>';
       setTimeout(function() { $('errBar').style.display = 'none'; }, 2000);
     } else {
@@ -1657,7 +1846,7 @@ function renderSaveSlots() {
         var d = JSON.parse(raw);
         if (d && d.G && d.S) {
           used = true;
-          info = 'D' + d.G.day + ' · ¥' + (totalAssets(d.G,d.S)/10000).toFixed(1) + 'w';
+          info = 'D' + d.G.day + ' · ' + fmtMoney(totalAssets(d.G,d.S));
           if (d.name) nameStr = d.name;
         }
       } catch(e){}
@@ -1715,9 +1904,10 @@ function doReturnToStart() {
   currentShop = null;
   S = null;
   G = null;
+  _activeDetailId = null;
+  _detailChartData = null;
   $('startScreen').className = '';
   showSub('main');  /* 重置为开始主页，避免显示上次的存档/设置子页面 */
-  $('detailPanel').className = 'detail-panel';
   $('statsBar').innerHTML = '';
   $('cardsArea').innerHTML = '';
 }
@@ -1735,7 +1925,7 @@ function renderStats() {
       '<div class="stat-item"><div class="stat-label">可用资金</div><div class="stat-val neut">' + fmt$(G.money) + '</div></div>' +
       '<div class="stat-item"><div class="stat-label">持仓市值</div><div class="stat-val neut">' + fmt$(holdVal) + '</div></div>' +
       '<div class="stat-item"><div class="stat-label">总资产</div><div class="stat-val ' + (pnl >= 0 ? 'up' : 'down') + '">' + fmt$(ta) + '</div></div>' +
-      '<div class="stat-item"><div class="stat-label">总收益</div><div class="stat-val ' + (pnl >= 0 ? 'up' : 'down') + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + ' (' + (pnl >= 0 ? '+' : '') + pnlPct + '%)</div></div>' +
+      '<div class="stat-item"><div class="stat-label">总收益</div><div class="stat-val ' + (pnl >= 0 ? 'up' : 'down') + '">' + (pnl >= 0 ? '+' : '') + fmt$(pnl) + '<br><span style="font-size:12px">(' + (pnl >= 0 ? '+' : '') + pnlPct + '%)</span></div></div>' +
       '<div class="stat-item"><div class="stat-label">人脉点数</div><div class="stat-val neut">' + G.rp + '</div></div>' +
       '<div class="stat-item"><div class="stat-label">声望称号</div><div class="stat-val" style="color:#d29922">' + getRepTitle(ta) + '</div></div>';
   } catch(e) { showErr('stats: ' + e.message); }
@@ -1804,6 +1994,10 @@ function renderCards() {
         '<div class="card-tags"><span class="tag ' + riskCls + '">' + s.risk + '</span>' + (s.bankruptCount > 0 ? ' <span class="tag tag-bankrupt">重' + s.bankruptCount + '</span>' : '') + '</div>' +
         '<div class="card-rel">❤️ ' + Math.floor(s.rel) + ' / 100</div>' +
         '</div>';
+      /* Insert detail panel right after the clicked card, spanning full grid row */
+      if (_activeDetailId === s.id) {
+        h += '<div id="detailPanel" class="detail-panel show" style="grid-column:1 / -1">' + _buildDetailHTML(s) + '</div>';
+      }
     }
     $('cardGrid').innerHTML = h;
   } catch(e) { showErr('cards: ' + e.message); }
@@ -1811,6 +2005,7 @@ function renderCards() {
 
 /* ========== SHOW DETAIL ========== */
 var _klineGranularity = 'day'; /* day, week, month */
+var _activeDetailId = null;   /* 当前打开详情的商店id，null=关闭 */
 
 function _aggregateKLine(hist, granularity) {
   if (granularity === 'day' || hist.length < 2) return hist.slice();
@@ -1830,7 +2025,68 @@ function showDetail(id) {
     if (S[i].id === id) { currentShop = S[i]; break; }
   }
   if (!currentShop) return;
-  var s = currentShop;
+
+  /* Same shop already open — just update detail in-place (e.g. K-line switch) */
+  if (_activeDetailId === id) {
+    var dp = document.getElementById('detailPanel');
+    if (dp) {
+      dp.innerHTML = _buildDetailHTML(currentShop);
+      _setupAfterDetail();
+    }
+    return;
+  }
+
+  _activeDetailId = id;
+  renderCards();
+  _setupAfterDetail();
+  /* Scroll to make detail visible */
+  var dp = document.getElementById('detailPanel');
+  if (dp) setTimeout(function(){ dp.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 50);
+}
+
+function _setupAfterDetail() {
+  if (_detailChartData) {
+    var d = _detailChartData;
+    _setupChartInteract(d.s, d.aggHist, d.mn, d.mx, d.padL, d.padT, d.padB, d.cW, d.cH, d.W, d.H);
+    /* Re-register swipe handler on the new detail panel */
+    _initSwipeClose();
+  }
+}
+
+function _initSwipeClose() {
+  var panel = document.getElementById('detailPanel');
+  if (!panel) return;
+  if (panel._swipeInited) return;  /* already registered */
+  panel._swipeInited = true;
+  var startY = 0, startX = 0, moved = false;
+  panel.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) return;
+    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    moved = false;
+  }, {passive: true});
+  panel.addEventListener('touchmove', function(e) {
+    if (!currentShop) return;
+    var dy = e.touches[0].clientY - startY;
+    var dx = e.touches[0].clientX - startX;
+    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { e.preventDefault(); moved = true; }
+  }, {passive: false});
+  panel.addEventListener('touchend', function(e) {
+    if (!moved) return;
+    var dy = e.changedTouches[0].clientY - startY;
+    if (dy > 60) hideDetail();
+  });
+}
+
+function _setKLineGran(g) {
+  _klineGranularity = g;
+  if (currentShop) showDetail(currentShop.id);
+}
+
+/* ========== BUILD DETAIL HTML ========== */
+var _detailChartData = null; /* {s, aggHist, mn, mx, padL, padT, padB, cW, cH, W, H} */
+
+function _buildDetailHTML(s) {
   var prev = s.history && s.history.length >= 2 ? s.history[s.history.length - 2] : s.basePrice;
   var chg = s.price - prev;
   var chgP = prev > 0 ? ((chg / prev) * 100) : 0;
@@ -1848,10 +2104,8 @@ function showDetail(id) {
   var pad = Math.max((mx - mn) * 0.15, mx * 0.02);
   mx += pad;
   mn = Math.max(0.01, mn - pad);
-  /* Chart SVG - 带涨跌区域着色和均线 */
   var W = 600, H = 160, padL = 40, padR = 10, padT = 12, padB = 22;
   var cW = W - padL - padR, cH = H - padT - padB;
-  /* 价格点 */
   var pts = '', fillPts = '';
   if (aggHist.length > 1) {
     for (var pi = 0; pi < aggHist.length; pi++) {
@@ -1861,11 +2115,9 @@ function showDetail(id) {
       fillPts += (pi === 0 ? '' : ', ') + px.toFixed(1) + ',' + py.toFixed(1);
     }
   }
-  /* 均线 MA10 */
   var maPts = '';
   if (aggHist.length >= 10) {
-    var maStart = '';
-    for (var mi = 0; mi < aggHist.length; maStart += '0,', mi++) {
+    for (var mi = 0; mi < aggHist.length; mi++) {
       if (mi < 9) continue;
       var sum = 0;
       for (var mj = mi - 9; mj <= mi; mj++) sum += aggHist[mj];
@@ -1873,10 +2125,8 @@ function showDetail(id) {
       var mpx = padL + (mi / (aggHist.length - 1)) * cW;
       var mpy = padT + cH - ((maVal - mn) / (mx - mn)) * cH;
       maPts += (maPts === '' ? '' : ', ') + mpx.toFixed(1) + ',' + mpy.toFixed(1);
-      if (!maStart) maStart = mpx.toFixed(1) + ',' + (H - padB).toFixed(1);
     }
   }
-  /* 当前价格 vs 基础价判断涨跌色 */
   var isUp = chg >= 0;
   var mainColor = isUp ? '#f85149' : '#3fb950';
   var fillColor = isUp ? 'rgba(248,81,73,0.12)' : 'rgba(63,185,80,0.12)';
@@ -1887,11 +2137,10 @@ function showDetail(id) {
   var hasShare = s.shares > 0;
   var canSell = !susp && hasShare && (s.shares - s.lockedShares) >= CFG.TRADE_UNIT;
   var acts = susp
-    ? '<div style="color:#f0883e;font-weight:700;margin-bottom:8px">⏸️ 停牌中 — 剩余 ' + s.suspended + ' 天，无法交易</div>' +
+    ? '<div style="color:#f0883e;font-weight:700;margin-bottom:8px">\u23f8\ufe0f 停牌中 — 剩余 ' + s.suspended + ' 天，无法交易</div>' +
       (s.bankruptCount > 0 ? '<div style="font-size:11px;color:#8b949e">已重组 ' + s.bankruptCount + ' 次</div>' : '')
     : '<button class="btn btn-primary btn-sm" onclick="openBuy(\'' + s.id + '\')">买入</button> ';
   if (canSell) acts += '<button class="btn btn-danger btn-sm" onclick="openSell(\'' + s.id + '\')">卖出</button> ';
-  /* 做空按钮 */
   if (!susp) {
     if (s.shortShares > 0) {
       var shortProf = (s.shortPrice - s.price) / s.shortPrice;
@@ -1901,8 +2150,6 @@ function showDetail(id) {
       acts += '<button class="btn btn-sm" style="background:#f0883e;color:#fff" onclick="openShort(\'' + s.id + '\')">做空</button> ';
     }
   }
-
-  /* Interventions */
   var ints = getInterventions(s);
   acts += '<br>';
   var intBtns = [];
@@ -1914,13 +2161,15 @@ function showDetail(id) {
         ' <span style="font-size:10px;opacity:0.7">需' + iv.relReq + '关系</span></button>');
     } else {
       intBtns.push('<button class="btn btn-sm" disabled style="background:#21262d;color:#484f58;border-color:#30363d;cursor:not-allowed">' +
-        iv.name + ' <span style="font-size:10px">🔒需' + iv.relReq + '关系</span></button>');
+        iv.name + ' <span style="font-size:10px">\ud83d\udd12需' + iv.relReq + '关系</span></button>');
     }
   }
   if (intBtns.length > 0) acts += '<div style="font-size:11px;color:#8b949e;margin-bottom:6px">介入经营:</div>' + intBtns.join(' ');
 
-  $('detailPanel').innerHTML =
-    '<div class="detail-header">' +
+  /* Store chart params for interact setup */
+  _detailChartData = { s: s, aggHist: aggHist, mn: mn, mx: mx, padL: padL, padT: padT, padB: padB, cW: cW, cH: cH, W: W, H: H };
+
+  return '<div class="detail-header">' +
       '<h3>' + s.icon + ' ' + s.name + '</h3>' +
       '<button class="close-btn" onclick="hideDetail()">&times;</button>' +
     '</div>' +
@@ -1929,41 +2178,38 @@ function showDetail(id) {
       '<div class="detail-stat">基础价: <b>$' + s.basePrice.toFixed(2) + '</b></div>' +
       '<div class="detail-stat">涨跌(近期): <b class="' + (chg >= 0 ? 'up' : 'down') + '">' + (chg >= 0 ? '+' : '') + absChgStr + ' (' + chgP.toFixed(1) + '%)</b></div>' +
       '<div class="detail-stat">经营系数: <b>' + s.coeff.toFixed(2) + '</b></div>' +
-      '<div class="detail-stat">风险评级: <span class="tag ' + (s.risk === '保守' ? 'risk-low' : (s.risk === '激进' ? 'risk-high' : 'risk-mid')) + '" style="font-size:12px;display:inline-block;padding:2px 8px;border-radius:4px;margin-left:4px">' + s.risk + '</span></div>' +
-      (susp ? '<div class="detail-stat" style="color:#f0883e;font-weight:700">⏸️ 停牌中 — 剩余 ' + s.suspended + ' 天</div>' : '') +
+      '<div class="detail-stat">风险评级: <span class="tag ' + (s.risk === '\u4fdd\u5b88' ? 'risk-low' : (s.risk === '\u6fc0\u8fdb' ? 'risk-high' : 'risk-mid')) + '" style="font-size:12px;display:inline-block;padding:2px 8px;border-radius:4px;margin-left:4px">' + s.risk + '</span></div>' +
+      (susp ? '<div class="detail-stat" style="color:#f0883e;font-weight:700">\u23f8\ufe0f 停牌中 — 剩余 ' + s.suspended + ' 天</div>' : '') +
       (s.bankruptCount > 0 ? '<div class="detail-stat" style="color:#f0883e">已破产重组: <b>' + s.bankruptCount + '次</b></div>' : '') +
       '<div class="detail-stat">关系值: <b>' + Math.floor(s.rel) + '/100</b></div>' +
       (hasShare ? '<div class="detail-stat">持仓: <b>' + s.shares + '股</b> (锁定' + s.lockedShares + '股)</div>' : '') +
       (hasShare ? '<div class="detail-stat">成本均价: <b>$' + s.costAvg.toFixed(2) + '</b></div>' : '') +
       (hasShare ? '<div class="detail-stat">持仓盈亏: <b class="' + (s.price >= s.costAvg ? 'up' : 'down') + '">' + ((s.price - s.costAvg) * s.shares).toFixed(2) + '</b></div>' : '') +
     '</div>' +
-    /* Boss stories */
     (s.stories && s.stories.length > 0 ? (function(){
-      /* 根据当前关系值计算已解锁的故事数量 */
       var su = 0;
       for (var sti0 = 0; sti0 < s.stories.length; sti0++) {
         if (s.rel >= s.stories[sti0].rel) su++; else break;
       }
       s.storyUnlocked = su;
       var sh = '<div style="background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px 12px;margin-bottom:12px">' +
-        '<div style="font-size:11px;color:#8b949e;margin-bottom:6px">📖 老板故事 (' + su + '/' + s.stories.length + ')</div>';
+        '<div style="font-size:11px;color:#8b949e;margin-bottom:6px">\ud83d\udcd6 老板故事 (' + su + '/' + s.stories.length + ')</div>';
       for (var sti = 0; sti < s.stories.length; sti++) {
         var st = s.stories[sti];
         var locked = sti >= su;
         if (locked) {
           sh += '<div style="font-size:11px;color:#484f58;padding:4px 0;line-height:1.6">' +
-            '🔒 <span style="color:#d29922">关系值达到 ❤️' + st.rel + '</span> 后解锁</div>';
+            '\ud83d\udd12 <span style="color:#d29922">关系值达到 \u2764\ufe0f' + st.rel + '</span> 后解锁</div>';
         } else {
           sh += '<div style="font-size:11px;color:#c9d1d9;padding:4px 0;line-height:1.6">' +
-            '📌 <span style="color:#d29922">❤️' + st.rel + '</span> ' + st.t + '</div>';
+            '\ud83d\udccc <span style="color:#d29922">\u2764\ufe0f' + st.rel + '</span> ' + st.t + '</div>';
         }
       }
       sh += '</div>';
       return sh;
     })() : '') +
-    /* 价格预警 */
     '<div style="background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px 12px;margin-bottom:12px">' +
-      '<div style="font-size:11px;color:#8b949e;margin-bottom:6px">🔔 价格预警</div>' +
+      '<div style="font-size:11px;color:#8b949e;margin-bottom:6px">\ud83d\udd14 价格预警</div>' +
       (s.alertPrice ? (
         '<div style="font-size:12px;color:#d29922;margin-bottom:4px">已设置: ' +
           (s.alertDir === 'above' ? '涨破' : '跌破') + ' $' + s.alertPrice.toFixed(2) +
@@ -1990,7 +2236,6 @@ function showDetail(id) {
       (aggHist.length > 1 ? '<polyline fill="' + fillColor + '" stroke="none" points="' + fillPts + ' ' + (W - padR) + ',' + (H - padB) + ' ' + padL + ',' + (H - padB) + '"/>' : '') +
       (aggHist.length > 1 ? '<polyline fill="none" stroke="' + mainColor + '" stroke-width="1.8" points="' + pts + '"/>' : '') +
       (maPts ? '<polyline fill="none" stroke="' + maColor + '" stroke-width="1.2" stroke-dasharray="3,3" points="' + maPts + '"/>' : '') +
-      /* 买卖点标记 */
       (function(){
         var markers = '';
         if (_klineGranularity === 'day' && G.tradeHistory && hist.length > 1) {
@@ -2013,7 +2258,6 @@ function showDetail(id) {
         }
         return markers;
       })() +
-      /* 最新价格点标记 */
       (pts ? '<circle cx="' + padL + cW + '" cy="' + pts.split(',').slice(-2)[1] + '" r="3" fill="' + mainColor + '"/>' : '') +
       '<line id="crosshairV" y1="0" y2="' + H + '" stroke="#f0883e" stroke-width="0.5" stroke-dasharray="2,2" style="display:none;pointer-events:none"/>' +
       '<line id="crosshairH" x1="0" x2="' + W + '" stroke="#f0883e" stroke-width="0.5" stroke-dasharray="2,2" style="display:none;pointer-events:none"/>' +
@@ -2022,13 +2266,6 @@ function showDetail(id) {
     '<div class="chart-tooltip" id="chartTooltip"><div class="tt-date"></div><div class="tt-price"></div><div class="tt-chg"></div></div>' +
     '</div>' +
     '<div class="detail-actions">' + acts + '</div>';
-  $('detailPanel').className = 'detail-panel show';
-  _setupChartInteract(s, aggHist, mn, mx, padL, padT, padB, cW, cH, W, H);
-}
-
-function _setKLineGran(g) {
-  _klineGranularity = g;
-  if (currentShop) showDetail(currentShop.id);
 }
 
 /* ========== CHART CROSSHAIR INTERACTION ========== */
@@ -2167,40 +2404,11 @@ function _chartTouchMove(e) {
 function _chartTouchEnd() { _hideCrosshair(); }
 
 function hideDetail() {
-  $('detailPanel').className = 'detail-panel';
+  _activeDetailId = null;
+  _detailChartData = null;
   currentShop = null;
+  renderCards();
 }
-
-/* Swipe to close detail panel */
-(function(){
-  var panel = $('detailPanel');
-  if (!panel) return;
-  var startY = 0, startX = 0, moved = false;
-  panel.addEventListener('touchstart', function(e) {
-    if (e.touches.length !== 1) return;
-    startY = e.touches[0].clientY;
-    startX = e.touches[0].clientX;
-    moved = false;
-  }, {passive: true});
-  panel.addEventListener('touchmove', function(e) {
-    if (!currentShop) return;
-    var dy = e.touches[0].clientY - startY;
-    var dx = e.touches[0].clientX - startX;
-    if (Math.abs(dy) > Math.abs(dx) && dy > 10) {
-      moved = true;
-      panel.style.transform = 'translateY(' + Math.min(dy, 80) + 'px)';
-      panel.style.opacity = (1 - dy / 200).toFixed(2);
-    }
-  }, {passive: true});
-  panel.addEventListener('touchend', function() {
-    if (!moved || !currentShop) { panel.style.transform = ''; panel.style.opacity = ''; return; }
-    var dy = parseFloat(panel.style.transform.replace('translateY(','').replace('px)','')) || 0;
-    panel.style.transform = '';
-    panel.style.opacity = '';
-    if (dy > 60) { hideDetail(); }
-    moved = false;
-  });
-})();
 
 /* ========== PRICE ALERTS ========== */
 function setAlert(id) {
@@ -2462,11 +2670,15 @@ function switchTab(t) {
   $('contentStats').style.display = t === 'stats' ? 'block' : 'none';
   $('contentMissions').style.display = t === 'missions' ? 'block' : 'none';
   $('contentAssets').style.display = t === 'assets' ? 'block' : 'none';
+  $('contentStore').style.display = t === 'store' ? 'block' : 'none';
+  $('contentLeaderboard').style.display = t === 'leaderboard' ? 'block' : 'none';
   if (t === 'holdings') renderHoldings();
   if (t === 'logs') renderLogs();
   if (t === 'stats') renderStatsTab();
   if (t === 'missions') renderMissions();
   if (t === 'assets') { renderHoldingsPie(); renderAssetChart(); renderCompareChart(); }
+  if (t === 'store') renderStore();
+  if (t === 'leaderboard') renderLeaderboard();
 }
 
 function setSp(el) {
@@ -3321,6 +3533,7 @@ function _doAdvanceCore(evt, choice) {
   G.assetHistory.push({day: G.day, val: totalAssets(G, S)});
   checkMission(G, S, 'advance', 0);
   checkAchievements();
+  checkEndings();
   $('headerDate').textContent = fmtDate(G.day);
   /* 每7天（1周）显示一次每日简报 */
   if (G.day > 1 && G.day % 7 === 0) {
@@ -3328,6 +3541,7 @@ function _doAdvanceCore(evt, choice) {
   } else {
     renderAll();
   }
+  updateLeaderboardNpc();
   saveGame();
 }
 
@@ -3505,14 +3719,260 @@ function showAchievePopup(ach) {
   setTimeout(function(){if(pop.parentNode)pop.parentNode.removeChild(pop);}, 3000);
 }
 
+/* ========== ENDING CHECKS ========== */
+function checkEndings() {
+  var ta = totalAssets(G, S);
+  /* 跟踪峰值资产 */
+  if (!G.peakAssets || ta > G.peakAssets) G.peakAssets = ta;
+
+  /* 富豪结局：总资产 >= 100亿 */
+  if (ta >= 10000000000 && !G._millionaireShown) {
+    G._millionaireShown = true;
+    showMillionaireScreen();
+    return;
+  }
+
+  /* 破产检测：现金极少且无任何持仓 */
+  var anyHold = false;
+  for (var i = 0; i < S.length; i++) {
+    if (S[i].shares > 0 || S[i].shortShares > 0) { anyHold = true; break; }
+  }
+  if (G.money < 1000 && !anyHold && !G._bankruptShown) {
+    G._bankruptShown = true;
+    showBankruptScreen();
+  }
+}
+
+function showBankruptScreen() {
+  playSound('sell');
+  trackEvent('游戏', '破产', '总资产'+fmt$(totalAssets(G,S)));
+  var ta = totalAssets(G, S);
+  var d = G.day;
+  var h = '';
+  h += makeEndStat('游戏天数', d + '天');
+  h += makeEndStat('峰值资产', fmt$(G.peakAssets || CFG.START_MONEY));
+  h += makeEndStat('最终资产', fmt$(ta));
+  h += makeEndStat('交易次数', (G.tradeCount||0) + '笔');
+  var wr = G.tradeCount > 0 ? Math.round(G.winCount/G.tradeCount*100) : 0;
+  h += makeEndStat('胜率', wr + '%');
+  h += makeEndStat('达成成就', (G.achievements||[]).length + '个');
+  $('bankruptStats').innerHTML = h;
+  var peak = G.peakAssets || CFG.START_MONEY;
+  $('bankruptSub').textContent = '从 ' + fmt$(peak) + ' 跌到 ' + fmt$(ta) + '，市场无情，来日再战！';
+  $('bankruptScreen').className = 'ending-overlay ending-bankrupt show';
+}
+
+function showMillionaireScreen() {
+  playSound('achieve');
+  trackEvent('游戏', '富豪结局', '总资产'+fmt$(totalAssets(G,S)));
+  var ta = totalAssets(G, S);
+  var d = G.day;
+  var h = '';
+  h += makeEndStat('游戏天数', d + '天');
+  h += makeEndStat('总资产', fmt$(ta));
+  h += makeEndStat('交易次数', (G.tradeCount||0) + '笔');
+  var wr = G.tradeCount > 0 ? Math.round(G.winCount/G.tradeCount*100) : 0;
+  h += makeEndStat('胜率', wr + '%');
+  h += makeEndStat('最大连赢', (G.winStreak||0) + '次');
+  h += makeEndStat('达成成就', (G.achievements||[]).length + '/' + CFG.ACHIEVEMENTS.length + '个');
+  $('millionaireStats').innerHTML = h;
+  $('millionaireSub').textContent = '第 ' + d + ' 天，你成为了小镇的传奇投资人！';
+  $('millionaireScreen').className = 'ending-overlay ending-millionaire show';
+}
+
+function makeEndStat(label, val) {
+  return '<div class="ending-stat"><div class="es-val">' + val + '</div><div class="es-label">' + label + '</div></div>';
+}
+
+function _doRestartGame() {
+  if (typeof doReturnToStart === 'function') {
+    /* 清理所有覆盖层 */
+    var ols = document.querySelectorAll('.ending-overlay.show,.modal-overlay.show');
+    for (var oi = 0; oi < ols.length; oi++) ols[oi].className = ols[oi].className.replace(' show','');
+    doReturnToStart();
+  }
+}
+
+function _dismissEnding(id) {
+  var el = document.getElementById(id);
+  if (el) el.className = el.className.replace(' show','');
+}
+
+/* ========== STORE ========== */
+function renderStore() {
+  var owned = G.storeItems || [];
+  var cats = [];
+  var catIdx = {};
+  for (var i = 0; i < STORE_ITEMS.length; i++) {
+    var c = STORE_ITEMS[i].cat;
+    if (catIdx[c] === undefined) { catIdx[c] = cats.length; cats.push({name:c, items:[]}); }
+    cats[catIdx[c]].items.push(STORE_ITEMS[i]);
+  }
+  var h = '';
+  for (var ci = 0; ci < cats.length; ci++) {
+    var cat = cats[ci];
+    h += '<div class="store-cat"><div class="store-cat-title">' + cat.name + '</div><div class="store-grid">';
+    for (var ii = 0; ii < cat.items.length; ii++) {
+      var item = cat.items[ii];
+      var has = owned.indexOf(item.id) >= 0;
+      var buys = has ? owned.filter(function(x){return x===item.id;}).length : 0;
+      h += '<div class="store-card" onclick="buyStoreItem(\'' + item.id + '\')">';
+      h += '<div class="store-card-icon">' + item.icon + (buys > 0 ? ' ×' + buys : '') + '</div>';
+      h += '<div class="store-card-name">' + item.name + (buys > 0 ? ' <span style=\'font-size:10px;opacity:0.6\'>已购' + buys + '次</span>' : '') + '</div>';
+      h += '<div class="store-card-price">¥' + item.price.toLocaleString() + '</div>';
+      h += '<div class="store-card-rp">🤝 人脉 +' + item.rp + '</div>';
+      if (G.money < item.price) {
+        h += '<div class="store-card-cant">💰 资金不足</div>';
+      }
+      h += '</div>';
+    }
+    h += '</div></div>';
+  }
+  $('storeArea').innerHTML = h;
+}
+
+function buyStoreItem(id) {
+  var item = null;
+  for (var i = 0; i < STORE_ITEMS.length; i++) {
+    if (STORE_ITEMS[i].id === id) { item = STORE_ITEMS[i]; break; }
+  }
+  if (!item) return;
+  if (!G.storeItems) G.storeItems = [];
+  if (G.money < item.price) { showToast('💰 资金不足！还需 ¥' + (item.price - G.money).toLocaleString(), '#f85149', 2500); return; }
+  G.money -= item.price;
+  G.rp = (G.rp || 0) + item.rp;
+  G.storeItems.push(id);
+  playSound('buy');
+  showToast('✅ 购得「' + item.name + '」人脉 +' + item.rp, '#3fb950', 2500);
+
+  renderStore();
+  renderStats();
+  saveGame();
+}
+
+function _fmtLbAssets(v) {
+  if (v >= 100000000) return '¥' + (v / 100000000).toFixed(2) + '亿';
+  if (v >= 10000) return '¥' + (v / 10000).toFixed(0) + '万';
+  return '¥' + v.toLocaleString();
+}
+
+function renderLeaderboard() {
+  /* 确保NPC资产已初始化 */
+  if (!G._lb_npc_assets) {
+    G._lb_npc_assets = [];
+    for (var i = 0; i < LEADERBOARD_NPC.length; i++) {
+      G._lb_npc_assets.push({name:LEADERBOARD_NPC[i].name, title:LEADERBOARD_NPC[i].title, assets:LEADERBOARD_NPC[i].assets, vol:LEADERBOARD_NPC[i].volatility});
+    }
+    saveGame();
+  }
+  var playerName = G.name || '你';
+  var playerAssets = totalAssets(G, S);
+  /* 构建榜：NPC + 玩家 */
+  var rows = [];
+  for (var i = 0; i < G._lb_npc_assets.length; i++) {
+    var n = G._lb_npc_assets[i];
+    rows.push({name:n.name, title:n.title, assets:n.assets, isPlayer:false});
+  }
+  rows.push({name:playerName, title:getRepTitle(playerAssets), assets:playerAssets, isPlayer:true});
+  /* 排序 */
+  rows.sort(function(a,b){return b.assets - a.assets;});
+  /* 去重：同名NPC取最高 */
+  var seen = {}, dedup = [];
+  for (var i = 0; i < rows.length; i++) {
+    if (seen[rows[i].name]) continue;
+    seen[rows[i].name] = true;
+    dedup.push(rows[i]);
+  }
+  rows = dedup.slice(0, 10);
+  /* 渲染领奖台（前三） */
+  var podiumOrder = [1,0,2]; /* 左:第2, 中:第1, 右:第3 */
+  var podiumH = [80, 100, 70];
+  var podiumCol = ['#c0c0c0','#ffd700','#cd7f32'];
+  var podiumIcon = ['🥈','🥇','🥉'];
+  var h = '<div class="lb-podium">';
+  var playerOnList = false;
+  for (var pi = 0; pi < 3; pi++) {
+    var idx = podiumOrder[pi];
+    if (idx >= rows.length) continue;
+    var r = rows[idx];
+    if (r.isPlayer) playerOnList = true;
+    h += '<div class="lb-podium-item">';
+    h += '<div class="lb-podium-name">' + (r.isPlayer ? '👑' : podiumIcon[pi]) + ' ' + r.name + '</div>';
+    h += '<div class="lb-podium-bar" style="width:100%;height:' + podiumH[pi] + 'px;background:' + podiumCol[pi] + '"></div>';
+    h += '<div class="lb-podium-assets">' + _fmtLbAssets(r.assets) + '</div>';
+    h += '</div>';
+  }
+  h += '</div>';
+  /* 渲染第4~10名 */
+  for (var i = 3; i < rows.length && i < 10; i++) {
+    var r = rows[i];
+    var isP = r.isPlayer;
+    if (isP) playerOnList = true;
+    var rankIcon = (i===3)?'4':(i===4)?'5':(i===5)?'6':(i===6)?'7':(i===7)?'8':(i===8)?'9':(i===9)?'10':'';
+    h += '<div class="lb-row' + (isP ? ' lb-player' : '') + '">';
+    h += '<div class="lb-rank">' + rankIcon + '</div>';
+    h += '<div class="lb-name">' + r.name + (isP ? '<span class="lb-new-badge">🏆 你</span>' : '') + '</div>';
+    h += '<div class="lb-assets">' + _fmtLbAssets(r.assets) + '</div>';
+    h += '</div>';
+  }
+  if (!playerOnList) {
+    /* 玩家未上榜 — 显示玩家实际资产和最后一名差距 */
+    var diff = rows[9].assets - playerAssets;
+    h += '<div class="lb-total" style="font-size:14px;padding:16px">' +
+      '🔒 你还差 <b>¥' + Math.max(0, Math.ceil(diff)).toLocaleString() + '</b> 就能上榜！<br>' +
+      '<span style="font-size:12px;color:#6e7681">你的总资产：' + _fmtLbAssets(playerAssets) + ' ｜ 第10名：' + _fmtLbAssets(rows[9].assets) + '</span></div>';
+  }
+  $('lbArea').innerHTML = h;
+}
+
+function updateLeaderboardNpc() {
+  if (!G._lb_npc_assets) return;
+  for (var i = 0; i < G._lb_npc_assets.length; i++) {
+    var n = G._lb_npc_assets[i];
+    var vol = n.vol || 0.05;
+    var change = (Math.random() * 2 - 1) * vol; /* -vol ~ +vol */
+    n.assets = Math.round(n.assets * (1 + change));
+    if (n.assets < 10000) n.assets = 10000;
+  }
+}
+
 /* ========== REPUTATION ========== */
 function getRepTitle(assets) {
-  if (assets >= 1000000) return '👑 小镇传奇';
+  /* 玩家手动选择了称号 */
+  if (G && G.activeTitle) {
+    for (var ti = 0; ti < CFG.ACHIEVEMENTS.length; ti++) {
+      if (CFG.ACHIEVEMENTS[ti].id === G.activeTitle) {
+        return CFG.ACHIEVEMENTS[ti].icon + ' ' + CFG.ACHIEVEMENTS[ti].name;
+      }
+    }
+  }
+  if (assets >= 10000000000) return '👑 小镇传奇';
   if (assets >= 500000) return '💎 小镇大亨';
   if (assets >= 200000) return '📈 小镇投资人';
   if (assets >= 100000) return '📊 小镇股民';
   if (assets >= 50000) return '🔍 小镇观察者';
   return '🌱 小镇新手';
+}
+
+function setActiveTitle(achId) {
+  if (!G) return;
+  if (G.achievements.indexOf(achId) < 0) return; /* 未解锁，不可佩戴 */
+  if (G.activeTitle === achId) {
+    /* 已佩戴，点击取消 → 恢复自动 */
+    G.activeTitle = null;
+    showToast('⚙️ 已取消佩戴，恢复自动称号');
+  } else {
+    G.activeTitle = achId;
+    /* 找到称号名称 */
+    var tname = achId;
+    for (var ti = 0; ti < CFG.ACHIEVEMENTS.length; ti++) {
+      if (CFG.ACHIEVEMENTS[ti].id === achId) { tname = CFG.ACHIEVEMENTS[ti].name; break; }
+    }
+    showToast('👑 已佩戴称号：「' + tname + '」');
+  }
+  saveGame();
+  renderStats();
+  renderStatsTab();
 }
 
 /* ========== STATS TAB ========== */
@@ -3588,14 +4048,28 @@ function renderStatsTab() {
       h += '</div>';
     }
 
-    /* 成就列表 */
-    h += '<div style="font-size:14px;color:#e6edf3;font-weight:600;margin-bottom:10px">🏆 已达成成就 (' + G.achievements.length + '/' + CFG.ACHIEVEMENTS.length + ')</div>';
+    h += '<div style="font-size:14px;color:#e6edf3;font-weight:600;margin-bottom:6px">🏆 成就称号 (' + G.achievements.length + '/' + CFG.ACHIEVEMENTS.length + ')</div>';
+    h += '<div style="font-size:11px;color:#8b949e;margin-bottom:10px">点击已解锁的称号即可佩戴，顶部声望称号会同步更新</div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">';
     for (var ai = 0; ai < CFG.ACHIEVEMENTS.length; ai++) {
       var ach = CFG.ACHIEVEMENTS[ai];
       var done = G.achievements.indexOf(ach.id) >= 0;
-      h += '<div style="background:' + (done ? '#1a3a2a' : '#21262d') + ';border:1px solid ' + (done ? '#3fb950' : '#30363d') + ';border-radius:8px;padding:8px 12px;font-size:12px;color:' + (done ? '#3fb950' : '#484f58') + '">' +
-        ach.icon + ' ' + ach.name + (done ? '' : ' 🔒') + '</div>';
+      var isActive = G.activeTitle === ach.id;
+      var bbg = done ? (isActive ? '#2a3a1a' : '#1a3a2a') : '#21262d';
+      var bbdr = done ? '#d29922' : '#30363d';
+      var bclr = done ? (isActive ? '#d29922' : '#3fb950') : '#484f58';
+      var cls = isActive ? 'ach-card ach-active' : (done ? 'ach-card' : 'ach-card ach-locked');
+      var onclick = done ? 'onclick="event.stopPropagation();setActiveTitle(\'' + ach.id + '\')"' : '';
+      h += '<div class="' + cls + '" ' + onclick + ' style="border-radius:8px;padding:8px 12px;font-size:12px;background:' + bbg + ';border:2px solid ' + bbdr + ';color:' + bclr + '">' +
+        ach.icon + ' ' + ach.name;
+      if (isActive) {
+        h += ' <span style="color:#d29922;font-weight:700">👑佩戴中</span>';
+      } else if (done) {
+        h += ' <span style="color:#58a6ff;font-size:11px">佩戴→</span>';
+      } else {
+        h += ' 🔒';
+      }
+      h += '</div>';
     }
     h += '</div>';
     $('statsArea').innerHTML = h;
@@ -3617,13 +4091,20 @@ function renderAll() {
   else if (t === 'logs') renderLogs();
   else if (t === 'stats') renderStatsTab();
   else if (t === 'assets') renderAssetChart();
-  if (currentShop) showDetail(currentShop.id);
+  /* detail is now rendered inline inside cardGrid; re-setup chart interact */
+  if (_activeDetailId) _setupAfterDetail();
 }
 
 /* ========== UTILS ========== */
 function fmt$(v) {
+  if (v >= 100000000) return '$' + (v / 100000000).toFixed(2) + '亿';
   if (v >= 10000) return '$' + (v / 10000).toFixed(2) + 'w';
   return '$' + v.toFixed(0);
+}
+function fmtMoney(v) {
+  if (v >= 100000000) return '¥' + (v / 100000000).toFixed(2) + '亿';
+  if (v >= 10000) return '¥' + (v / 10000).toFixed(1) + 'w';
+  return '¥' + v.toFixed(0);
 }
 
 /* ========== INIT ========== */
